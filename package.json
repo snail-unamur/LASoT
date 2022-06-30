@@ -16,8 +16,8 @@
 	"contributes": {
 		"commands": [
 			{
-			  "command": "mutationTestingGoal",
-			  "title": "Mutation testing goal",
+			  "command": "executeGoal",
+			  "title": "execute goal",
 			  "icon": "$(play)"
 			}
 		],
@@ -32,12 +32,12 @@
 		"menus": {
 		  "view/item/context": [
 			{
-			  "command": "mutationTestingGoal",
+			  "command": "executeGoal",
 			  "when": "view == mutationTesting && viewItem == goal",
 			  "group": "inline"
 			},
 			{
-			  "command": "mutationTestingGoal",
+			  "command": "executeGoal",
 			  "when": "view == mutationTesting && viewItem == goal"
 			}
 		  ]

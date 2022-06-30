@@ -10,16 +10,38 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:lasot.helloWorld"
+		"onView:mutationTesting"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "lasot.helloWorld",
-				"title": "Hello World"
+			  "command": "mutationTestingGoal",
+			  "title": "Mutation testing goal",
+			  "icon": "$(play)"
 			}
-		]
+		],
+		"views": {
+		  "explorer": [
+			{
+			  "id": "mutationTesting",
+			  "name": "Mutation Testing"
+			}
+		  ]
+		},
+		"menus": {
+		  "view/item/context": [
+			{
+			  "command": "mutationTestingGoal",
+			  "when": "view == mutationTesting && viewItem == goal",
+			  "group": "inline"
+			},
+			{
+			  "command": "mutationTestingGoal",
+			  "when": "view == mutationTesting && viewItem == goal"
+			}
+		  ]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

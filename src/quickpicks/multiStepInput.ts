@@ -317,8 +317,9 @@ class MultiStepInput {
 
 async function configOperators(selectedItems: readonly QuickPickItem[]) {
 	workspace.openTextDocument(Uri.file(Settings.getPomPath() as string)).then((a: TextDocument) => {
-		window.showTextDocument(a, 1, false).then(e => {
+		window.showTextDocument(a, 1, true).then(e => {
 			e.edit(async edit => {
+
 			//remove pom.xml content
 			let lineCount = e.document.lineCount;
 			let lastChar = e.document.lineAt(lineCount-1).range.end.character;				

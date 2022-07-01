@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { MutationTestingProvider } from "./explorer/mutationTestingProvider";
 import { Goal } from "./explorer/mutationTestingProvider";
-import { multiStepInput } from './multiStepInput';
+import { multiStepInput } from './quickpicks/multiStepInput';
 import { Settings } from "./settings";
 
 // this method is called when your extension is activated

@@ -4,6 +4,8 @@ import * as fs from "fs";
 import * as xml2js from 'xml2js';
 import { dir } from 'console';
 import { Settings } from '../settings';
+import { Utils } from '../utils/utils';
+import { constants } from 'buffer';
 
 export async function multiStepInput(context: ExtensionContext) {
 
@@ -66,6 +68,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			shouldResume: shouldResume
 		});
 		state.resourceGroup = pick;
+		Utils.runGoal(Settings.DESCARTES_MUTATION_COVERAGE);
 		return (input: MultiStepInput) => runReneriObserveMethodsGoal(input, state);
 	}
 
@@ -81,6 +84,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			shouldResume: shouldResume
 		});
 		state.resourceGroup = pick;
+		Utils.runGoal(Settings.RENERI_OBSERVE_METHODS);
 		return (input: MultiStepInput) => runReneriObserveTestsGoal(input, state);
 	}
 
@@ -96,6 +100,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			shouldResume: shouldResume
 		});
 		state.resourceGroup = pick;
+		Utils.runGoal(Settings.RENERI_OBSERVE_TESTS);
 		return (input: MultiStepInput) => runReneriHintsGoal(input, state);
 	}
 	
@@ -111,6 +116,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			shouldResume: shouldResume
 		});
 		state.resourceGroup = pick;
+		Utils.runGoal(Settings.RENERI_HINTS);
 		return /*(input: MultiStepInput) => inputName(input, state)*/;
 	}
 
@@ -217,7 +223,7 @@ class MultiStepInput {
                         if(input.canSelectMany){
                             input.enabled = false;
                             input.busy = true;
-							if(input.step == 1){
+							if(input.step === 1){
 								await configOperators(input.selectedItems);
 							}
                             resolve(items[0]);
@@ -331,7 +337,7 @@ async function configOperators(selectedItems: readonly QuickPickItem[]) {
 			parser.parseString(e.document.getText(), function(error,result) {
 				let plugins = result.project.build[0].plugins[0].plugin;
 				for(const plugin of plugins){
-					if(plugin.artifactId[0] == 'pitest-maven'){
+					if(plugin.artifactId[0] === 'pitest-maven'){
 						let configuration = plugin.configuration[0];
 						//remove mutator element
 						if(configuration.mutators[0]){

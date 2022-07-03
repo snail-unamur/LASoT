@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { commands } from "vscode";
 
 export class MutationTestingProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     constructor() {}

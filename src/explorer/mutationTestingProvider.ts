@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 
 export class MutationTestingProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-    constructor() {}
 
     getTreeItem(element: Goal): vscode.TreeItem {
       return element;
@@ -17,8 +16,10 @@ export class MutationTestingProvider implements vscode.TreeDataProvider<vscode.T
         const ret: vscode.TreeItem[] = [];
         const descartesMenu : Menu = new Menu("Descartes",vscode.TreeItemCollapsibleState.Collapsed);
         const reneriMenu : Menu = new Menu("Reneri",vscode.TreeItemCollapsibleState.Collapsed);
+        const lasotMenu : Menu = new Menu("LASoT",vscode.TreeItemCollapsibleState.Collapsed);
         ret.push(descartesMenu);
         ret.push(reneriMenu);
+        ret.push(lasotMenu);
   
         return Promise.resolve(ret);
       }
@@ -33,15 +34,16 @@ export class Goal extends vscode.TreeItem {
   constructor(
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+    public readonly ctxValue: string,
 		public readonly command?: vscode.Command
   ) {
     super(label, collapsibleState);
     this.tooltip = `${this.label}`;
+    this.contextValue = ctxValue;
   }
   
   iconPath = new vscode.ThemeIcon("gear");
 
-  contextValue = 'goal';
 }
 
 class Menu extends vscode.TreeItem {
@@ -68,7 +70,7 @@ function getCommandsInMenu(label: string | vscode.TreeItemLabel | undefined): vs
         title: 'mutationCoverage'
       }
       ];
-    return DEFAULT_DESCARTES_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None, command));
+    return DEFAULT_DESCARTES_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'goal', command));
   }
   else if(label === "Reneri"){
     const DEFAULT_RENERI_COMMANDS: vscode.Command[] = [
@@ -84,8 +86,17 @@ function getCommandsInMenu(label: string | vscode.TreeItemLabel | undefined): vs
         command: "eu.stamp-project:reneri:hints",
         title: 'hints'
       }
-    ]
-    return DEFAULT_RENERI_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,command));
+    ];
+    return DEFAULT_RENERI_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'goal',command));
+  }
+  else if(label === "LASoT"){
+    const DEFAULT_LASOT_COMMANDS: vscode.Command[] = [
+      {
+        command: "lasot.highlightsHints",
+        title: 'Highlights Hints'
+      }
+    ];
+    return DEFAULT_LASOT_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'lasot',command));
   }
   else{
     return [];

@@ -8,6 +8,10 @@ import { multiStepInput } from './quickpicks/multiStepInput';
 import { ReneriSerialized } from './reneriSerialized';
 import { Settings } from "./settings";
 
+let myStatusBarItem: vscode.StatusBarItem;
+const reneriSerialized: ReneriSerialized = new ReneriSerialized();
+let oldSurvivorsCount: number = 0;
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -32,12 +36,23 @@ export function activate(context: vscode.ExtensionContext) {
         terminal.sendText(`& "${mavenExecutablePath}" ${node.command?.command} -f "${pomPath}"`);
 	});
 	
-	const reneriSerialized: ReneriSerialized = new ReneriSerialized();
-
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
+		oldSurvivorsCount = reneriSerialized.getNumberOfSurvivors();
 		await reneriSerialized.ReadReneri();
 		decorator.active = true;
 		decorator.triggerUpdateDecorations();
+		updateStatusBarItem();
+		const n = reneriSerialized.getNumberOfSurvivors();
+		if(n == 0) {
+			vscode.window.showInformationMessage(`Yeah, no more survivors! Congratulations!`);
+		}else if(n > 0) {
+			if(n < oldSurvivorsCount) {
+				vscode.window.showInformationMessage(`This is better! There are still ${n} survivors... Keep going!`);
+			} 
+			else {
+				vscode.window.showInformationMessage(`Oups, There are more survivors than the last time!`);
+			}
+		}
 	});
 
 	vscode.window.registerTreeDataProvider(
@@ -66,9 +81,35 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(commands.registerCommand('lasot.wizard', async () => {
 		multiStepInput(context).catch(console.error);
 	}));
+
+	// --- Status bar
+	const myCommandId = 'lasot.showSurvivorsCount';
+	context.subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
+		let text: string = 'Pseudo tested methods found on ';
+		for(const survivor of reneriSerialized.survivors){
+			text += survivor.mutation.class.toString() + ':' + survivor.mutation.method.toString() + ',';
+		}
+		vscode.window.showInformationMessage(text);
+	}));
+
+	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	myStatusBarItem.command = myCommandId;
+	context.subscriptions.push(myStatusBarItem);
+
+	updateStatusBarItem();
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
+
+function updateStatusBarItem(): void {
+	const n = reneriSerialized.getNumberOfSurvivors();
+	if (n > 0) {
+		myStatusBarItem.text = `$(bug) ${n} survivor(s)`;
+		myStatusBarItem.show();
+	} else {
+		myStatusBarItem.hide();
+	}
+}
 
 

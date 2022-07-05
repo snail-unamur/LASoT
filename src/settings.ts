@@ -26,4 +26,5 @@ export namespace Settings {
         const mavenConfig = vscode.workspace.getConfiguration('maven');
         return mavenConfig.get('executable.path');    
     }
+
 }

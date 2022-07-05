@@ -16,6 +16,11 @@
   "contributes": {
     "commands": [
       {
+        "command": "lasot.highlightsHints",
+        "title": "Highlights Hints",
+        "icon": "$(play)"
+      },
+      {
         "command": "executeGoal",
         "title": "execute goal",
         "icon": "$(play)"
@@ -43,6 +48,10 @@
         {
           "command": "executeGoal",
           "when": "view == mutationTesting && viewItem == goal"
+        },
+        {
+          "command": "lasot.highlightsHints",
+          "when": "view == mutationTesting && viewItem == lasot"
         }
       ]
     }

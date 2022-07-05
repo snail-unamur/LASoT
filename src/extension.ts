@@ -2,9 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { MutationTestingProvider } from "./explorer/mutationTestingProvider";
-import { Goal } from "./explorer/mutationTestingProvider";
+import { Decorator } from './decorator/decorator';
+import { Goal, MutationTestingProvider } from "./explorer/mutationTestingProvider";
 import { multiStepInput } from './quickpicks/multiStepInput';
+import { ReneriSerialized } from './reneriSerialized';
 import { Settings } from "./settings";
 
 // this method is called when your extension is activated
@@ -14,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let pomPath = Settings.getPomPath();
 	if(pomPath === undefined){
-		vscode.window.showErrorMessage("pom.xml not found.  Install maven plugin.")
+		vscode.window.showErrorMessage("pom.xml not found.  Install maven plugin.");
 	}
 
 	let mavenExecutablePath = Settings.getMavenExecutablePath();
@@ -31,11 +32,37 @@ export function activate(context: vscode.ExtensionContext) {
         terminal.sendText(`& "${mavenExecutablePath}" ${node.command?.command} -f "${pomPath}"`);
 	});
 	
+	const reneriSerialized: ReneriSerialized = new ReneriSerialized();
+
+    vscode.commands.registerCommand('lasot.highlightsHints', async () => {
+		await reneriSerialized.ReadReneri();
+		decorator.active = true;
+		decorator.triggerUpdateDecorations();
+	});
+
 	vscode.window.registerTreeDataProvider(
 		'mutationTesting',
 		new MutationTestingProvider()
 	);
 
+
+	// --- Decorator
+	const decorator: Decorator = new Decorator(reneriSerialized);
+
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		decorator.activeEditor = editor;
+		if (editor) {
+			decorator.triggerUpdateDecorations();
+		}
+	}, null, context.subscriptions);
+
+	vscode.workspace.onDidChangeTextDocument(event => {
+		if (decorator.activeEditor && event.document === decorator.activeEditor.document) {
+			decorator.triggerUpdateDecorations(true);
+		}
+	}, null, context.subscriptions);
+
+	// --- TreeView
 	context.subscriptions.push(commands.registerCommand('lasot.wizard', async () => {
 		multiStepInput(context).catch(console.error);
 	}));
@@ -43,3 +70,5 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
+
+

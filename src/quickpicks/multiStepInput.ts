@@ -1,11 +1,9 @@
 
+import { getVSCodeDownloadUrl } from '@vscode/test-electron/out/util';
 import { QuickPickItem, window, Disposable, CancellationToken, QuickInputButton, QuickInput, ExtensionContext, QuickInputButtons, Uri, TextDocument, workspace, Position, Range } from 'vscode';
-import * as fs from "fs";
 import * as xml2js from 'xml2js';
-import { dir } from 'console';
 import { Settings } from '../settings';
 import { Utils } from '../utils/utils';
-import { constants } from 'buffer';
 
 export async function multiStepInput(context: ExtensionContext) {
 
@@ -23,6 +21,9 @@ export async function multiStepInput(context: ExtensionContext) {
 	];
 	const resourceReneriHintsGoal: QuickPickItem[] = [
 		{ label: 'hints', description: 'Will run hints goal.', detail: '' }
+	];
+	const resourceLASoT: QuickPickItem[] = [
+		{ label: 'LASoT', description: 'Will highlight reneri hints.', detail: '' }
 	];
     
     
@@ -117,6 +118,22 @@ export async function multiStepInput(context: ExtensionContext) {
 		});
 		state.resourceGroup = pick;
 		Utils.runGoal(Settings.RENERI_HINTS);
+		return (input: MultiStepInput) => ShowHints(input, state);
+	}
+	
+    async function ShowHints(input: MultiStepInput, state: Partial<State>) {
+		const pick = await input.showQuickPick({
+			title: 'LASoT',
+			step: 2,
+			totalSteps: 5,
+			placeholder: 'Show Hints',
+			items: resourceLASoT,
+            canSelectMany: false,
+			activeItem: typeof state.resourceGroup !== 'string' ? state.resourceGroup : undefined,
+			shouldResume: shouldResume
+		});
+		state.resourceGroup = pick;
+		//ReadReneri();
 		return /*(input: MultiStepInput) => inputName(input, state)*/;
 	}
 
@@ -326,14 +343,10 @@ async function configOperators(selectedItems: readonly QuickPickItem[]) {
 		window.showTextDocument(a, 1, true).then(e => {
 			e.edit(async edit => {
 
-			//remove pom.xml content
-			let lineCount = e.document.lineCount;
-			let lastChar = e.document.lineAt(lineCount-1).range.end.character;				
-			edit.delete(new Range(new Position(0,0),new Position(lineCount-1,lastChar)));
-			
 			//parse pom.xml to replace mutators config
 			var parser = new xml2js.Parser(/* options */);
 			var res:string='';
+
 			parser.parseString(e.document.getText(), function(error,result) {
 				let plugins = result.project.build[0].plugins[0].plugin;
 				for(const plugin of plugins){
@@ -360,6 +373,10 @@ async function configOperators(selectedItems: readonly QuickPickItem[]) {
 				res = builder.buildObject(result);
 			});
 
+			//remove pom.xml content
+			let lineCount = e.document.lineCount;
+			let lastChar = e.document.lineAt(lineCount-1).range.end.character;				
+			edit.delete(new Range(new Position(0,0),new Position(lineCount-1,lastChar)));
 			//insert complete new pom content in pom.xml
 			edit.insert(new Position(0,0),res);
 			});

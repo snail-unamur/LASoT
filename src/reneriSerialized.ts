@@ -17,11 +17,39 @@ export class ReneriSerialized {
         else{
 
         }
+
+        const mutationFiles = await vscode.workspace.findFiles('**/mutation.json','**/target/reneri/tests/**');
+        if(mutationFiles.length > 0){
+            for(let i:number = 0; i < mutationFiles.length;i++){
+                if(mutationFiles[i].fsPath.match('tests')){
+                    let mutation: Mutation[] = [];
+                    let a: vscode.TextDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(mutationFiles[i].fsPath));
+                    this.survivors[i].mutation = JSON.parse(a.getText()); 
+                }
+            }
+        }
+        else{
+
+        }
+    }
+
+    getNumberOfSurvivors(){
+        return this.survivors.length;
     }
 }
 
 class Survivor {
     public hints: Hint[] = [];
+    public mutation: Mutation = new Mutation();
+}
+
+class Mutation {
+    mutator: string = '';
+    class: string = '';
+    package: string = '';
+    method: string = '';
+    description: string = '';
+    tests: string[] = [];
 }
 
 interface Hint {

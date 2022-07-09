@@ -57,23 +57,20 @@ export class Decorator {
         }
         
         const reneriHints: vscode.DecorationOptions[] = [];
-        //const testHints: vscode.DecorationOptions[] = [];
         
 		for(const survivor of this.reneriSerialized.survivors){
 			for(const hint of survivor.hints){
 				if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
-					const from = new vscode.Position(hint.location.from.line, hint.location.from.column);
-					const to = new vscode.Position(hint.location.to.line, hint.location.to.column);
+					const from = new vscode.Position(hint.location.from.line-1, hint.location.from.column-1);
+					const to = new vscode.Position(hint.location.to.line-1, hint.location.to.column);
 					const range: vscode.Range = new vscode.Range(from , to);
 					const decoration = { range: range, hoverMessage: hint.location.point };
 					reneriHints.push(decoration);
 				}
 			}
 		}
+		
 		this.activeEditor.setDecorations(this.reneriHintDecorationType, reneriHints);
-		/*testHints.push({ range: new vscode.Range(new vscode.Position(0,0), new vscode.Position(49,55)), hoverMessage: 'test' });
-        testHints.push({ range: new vscode.Range(new vscode.Position(72,3), new vscode.Position(72,10)), hoverMessage: 'testdsfsefesdfsee' });
-        this.activeEditor.setDecorations(this.defaultDecorationType, testHints);*/
     }
 
 

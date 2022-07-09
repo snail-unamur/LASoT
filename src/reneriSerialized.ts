@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 export class ReneriSerialized {
     public survivors: Survivor[] = [];
 
-    async ReadReneri(){
+    async readReneri(){
         this.survivors = [];
         const hintsFiles = await vscode.workspace.findFiles('**/hints.json');
         if(hintsFiles.length > 0){

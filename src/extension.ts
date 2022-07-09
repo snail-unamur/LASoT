@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { Decorator } from './decorator/decorator';
 import { Goal, MutationTestingProvider } from "./explorer/mutationTestingProvider";
-import { multiStepInput } from './quickpicks/multiStepInput';
+import { LASoTMultiStepInput } from './quickpicks/lasotMultiStepInput';
 import { ReneriSerialized } from './reneriSerialized';
 import { Settings } from "./settings";
 
@@ -30,15 +30,31 @@ export function activate(context: vscode.ExtensionContext) {
 		mavenExecutablePath = mavenExecutablePath.concat('.cmd');
 	}
 
-    vscode.commands.registerCommand('executeGoal', (node: Goal) => {
-        const terminal = vscode.window.createTerminal(`Ext Terminal #${NEXT_TERM_ID++}`);
-        terminal.show();
-        terminal.sendText(`& "${mavenExecutablePath}" ${node.command?.command} -f "${pomPath}"`);
+    vscode.commands.registerCommand('executeGoal', (node?: Goal, goal?:string, exit?:boolean, hidden?:boolean, preserveFocus?:boolean) : vscode.Terminal => {
+		let goalString: string = '';
+		if(node && node.command?.command){
+			goalString = node.command?.command;
+		}
+		else if(goal){
+			goalString = goal;
+		}
+
+		let exitString:string="";
+		if(exit){
+			exitString = ";exit";
+		}
+
+		const terminal = vscode.window.createTerminal(`Ext Terminal #${NEXT_TERM_ID++}`);
+		if(!hidden){
+			terminal.show(preserveFocus);
+		}
+		terminal.sendText(`& "${mavenExecutablePath}" ${goalString} -f "${pomPath}" ${exitString}`);
+		return terminal;
 	});
 	
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
 		oldSurvivorsCount = reneriSerialized.getNumberOfSurvivors();
-		await reneriSerialized.ReadReneri();
+		await reneriSerialized.readReneri();
 		decorator.active = true;
 		decorator.triggerUpdateDecorations();
 		updateStatusBarItem();
@@ -55,6 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
+	// --- TreeView
 	vscode.window.registerTreeDataProvider(
 		'mutationTesting',
 		new MutationTestingProvider()
@@ -77,9 +94,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}, null, context.subscriptions);
 
-	// --- TreeView
+	// --- MultistepInput
+    const lasotMultiStepInput: LASoTMultiStepInput = new LASoTMultiStepInput();
+
 	context.subscriptions.push(commands.registerCommand('lasot.wizard', async () => {
-		multiStepInput(context).catch(console.error);
+		lasotMultiStepInput.collectInputs();
+		//multiStepInput(context).catch(console.error);
 	}));
 
 	// --- Status bar

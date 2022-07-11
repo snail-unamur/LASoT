@@ -4,17 +4,19 @@ import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { Decorator } from './decorator/decorator';
 import { Goal, MutationTestingProvider } from "./explorer/mutationTestingProvider";
+import { DescartesState } from './descartesState';
+import { ReneriState } from './reneriState';
 import { LASoTMultiStepInput } from './quickpicks/lasotMultiStepInput';
-import { ReneriSerialized } from './reneriSerialized';
 import { Settings } from "./settings";
 
 let myStatusBarItem: vscode.StatusBarItem;
-const reneriSerialized: ReneriSerialized = new ReneriSerialized();
 let oldSurvivorsCount: number = 0;
+let descartesState: DescartesState = new DescartesState();
+let reneriState: ReneriState = new ReneriState();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	let NEXT_TERM_ID = 1;
 
 	let pomPath = Settings.getPomPath();
@@ -29,6 +31,9 @@ export function activate(context: vscode.ExtensionContext) {
 	else{
 		mavenExecutablePath = mavenExecutablePath.concat('.cmd');
 	}
+
+	await descartesState.initialize();
+	await reneriState.initialize();
 
     vscode.commands.registerCommand('executeGoal', (node?: Goal, goal?:string, exit?:boolean, hidden?:boolean, preserveFocus?:boolean) : vscode.Terminal => {
 		let goalString: string = '';
@@ -53,12 +58,12 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
-		oldSurvivorsCount = reneriSerialized.getNumberOfSurvivors();
-		await reneriSerialized.readReneri();
+		oldSurvivorsCount = reneriState.getNumberOfSurvivors();
+		await reneriState.readReneri();
 		decorator.active = true;
 		decorator.triggerUpdateDecorations();
 		updateStatusBarItem();
-		const n = reneriSerialized.getNumberOfSurvivors();
+		const n = reneriState.getNumberOfSurvivors();
 		if(n == 0) {
 			vscode.window.showInformationMessage(`Yeah, no more survivors! Congratulations!`);
 		}else if(n > 0) {
@@ -79,7 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	// --- Decorator
-	const decorator: Decorator = new Decorator(reneriSerialized);
+	const decorator: Decorator = new Decorator(reneriState);
 
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		decorator.activeEditor = editor;
@@ -106,7 +111,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const myCommandId = 'lasot.showSurvivorsCount';
 	context.subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
 		let text: string = 'Pseudo tested methods found on ';
-		for(const survivor of reneriSerialized.survivors){
+		for(const survivor of reneriState.testsObservation.survivors){
 			text += survivor.mutation.class.toString() + ':' + survivor.mutation.method.toString() + ',';
 		}
 		vscode.window.showInformationMessage(text);
@@ -123,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 function updateStatusBarItem(): void {
-	const n = reneriSerialized.getNumberOfSurvivors();
+	const n = reneriState.getNumberOfSurvivors();
 	if (n > 0) {
 		myStatusBarItem.text = `$(bug) ${n} survivor(s)`;
 		myStatusBarItem.show();

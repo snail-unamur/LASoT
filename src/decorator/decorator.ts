@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
-import { ReneriSerialized } from '../reneriSerialized';
+import { MarkdownString } from 'vscode';
+import { Hint, ReneriState, Survivor } from '../reneriState';
 
 export class Decorator {
 
     public active: boolean = false;
 	public activeEditor = vscode.window.activeTextEditor;
-    reneriSerialized: ReneriSerialized;
+    reneriState: ReneriState;
+
     // decorator type used to decorate code pointed by reneri hints
 	reneriHintDecorationType = vscode.window.createTextEditorDecorationType({
 		borderWidth: '1px',
@@ -27,8 +29,8 @@ export class Decorator {
 		border: '2px solid white',
 	  });
 
-    constructor(reneriSerialized:ReneriSerialized) {
-        this.reneriSerialized = reneriSerialized;
+    constructor(reneriState:ReneriState) {
+        this.reneriState = reneriState;
 	    if (this.activeEditor) {
 		    this.triggerUpdateDecorations();
 	    }
@@ -56,25 +58,55 @@ export class Decorator {
             return;
         }
         
-        const reneriHints: vscode.DecorationOptions[] = [];
         
-		for(const survivor of this.reneriSerialized.survivors){
+		const decorationOptions: vscode.DecorationOptions[] = [];
+
+		for(const survivor of this.reneriState.testsObservation.survivors){	
 			for(const hint of survivor.hints){
 				if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
-					const from = new vscode.Position(hint.location.from.line-1, hint.location.from.column-1);
-					const to = new vscode.Position(hint.location.to.line-1, hint.location.to.column);
-					const range: vscode.Range = new vscode.Range(from , to);
-					const decoration = { range: range, hoverMessage: hint.location.point };
-					reneriHints.push(decoration);
+					const decoration = this.generateDecoration(hint,survivor);
+					decorationOptions.push(decoration);
 				}
 			}
 		}
 		
-		this.activeEditor.setDecorations(this.reneriHintDecorationType, reneriHints);
+		for(const survivor of this.reneriState.methodsObservation.survivors){	
+			for(const hint of survivor.hints){
+				if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
+					const decoration = this.generateDecoration(hint,survivor);
+					decorationOptions.push(decoration);
+				}
+			}
+		}
+		
+		this.activeEditor.setDecorations(this.reneriHintDecorationType, decorationOptions);
     }
 
+	
+	generateDecoration(hint: Hint, survivor: Survivor) : vscode.DecorationOptions {
+			const from = new vscode.Position(hint.location.from.line-1, hint.location.from.column-1);
+			const to = new vscode.Position(hint.location.to.line-1, hint.location.to.column);
+			const range: vscode.Range = new vscode.Range(from , to);
+			const hoverMessage = this.generateHoverMessage(survivor, hint);
+			return { range: range, hoverMessage: hoverMessage };
+	}
 
 
-    
+	generateHoverMessage(survivor: Survivor, hint: Hint) : MarkdownString{
+		const diff = survivor.diffs.find(d => d.pointcut === hint.pointcut);
+		let markDownString: MarkdownString = new MarkdownString();
+		markDownString.value = `
+		Original Code
+		~ Value : ${diff?.expected[0].literalValue}
+		~ Type : ${diff?.expected[0].typeName}
+	
+		Undetected Mutation
+		~ Value : ${diff?.unexpected[0].literalValue}
+		~ Type : ${diff?.unexpected[0].typeName}
+		`;
+		return markDownString;
+	}
 }
+
+
 

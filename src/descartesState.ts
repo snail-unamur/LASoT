@@ -4,6 +4,7 @@ import { FileExplorer, FileSystemProvider } from './utils/fileExplorer';
 
 export class DescartesState {
     private _reportFolders: [string, vscode.FileType][] | undefined;
+    public descartesReports: DescartesReports = new DescartesReports();
 
     public folderExists():boolean{
         if(this._reportFolders){
@@ -16,8 +17,8 @@ export class DescartesState {
 
     private async findFolder(): Promise<[string, vscode.FileType][]>{
         const path = Settings.getRootPath() + `\\target\\pit-reports`;
-        const treeDataProvider = new FileSystemProvider();
-        let descartesFolder = await treeDataProvider._readDirectory(vscode.Uri.file(path));
+        const fileSystemProvider = new FileSystemProvider();
+        let descartesFolder = await fileSystemProvider._readDirectory(vscode.Uri.file(path));
         return descartesFolder;
     }
 
@@ -49,4 +50,99 @@ export class DescartesState {
         }
         return date;
     }
+
+    public async readDescartes(){
+
+        if(this.folderExists()){
+            const lastReportFolder = this.getLastReportFolder();
+            if(lastReportFolder){
+                const globPattern = `**/target/pit-reports/${lastReportFolder[0]}/*.json`;
+                const descartesFiles = await vscode.workspace.findFiles(globPattern);
+                for(const file of descartesFiles){
+                    switch(file.path.split('/').pop()){
+                        case 'mutations.json': {
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(file.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            this.descartesReports.mutationReport = JSON.parse(a.getText());
+                            break;
+                        }
+                        case 'methods.json': {
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(file.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            this.descartesReports.methodReport = JSON.parse(a.getText());
+                            break;
+                        }
+                    }
+                }
+            }
+            
+        }
+    }
+}
+
+export class DescartesReports {
+    public methodReport: DescartesMethodReport = new DescartesMethodReport();
+    public mutationReport: DescartesMutationReport = new DescartesMutationReport();
+}
+
+export class DescartesMutationReport {
+    public mutations: DescartesMutationFull[] = [];
+    public mutators: string[] = [];
+}
+
+export class DescartesMutationFull {
+    public detected: boolean = false;
+    public status: string = '';
+    public mutator: string = '';
+    public line: number = 0;
+    public block: number = 0;
+    public file: string = '';
+    public index: number = 0;
+    public method: Method = new Method();
+    public tests: Tests = new Tests();
+}
+
+export class Method {
+    public name: string = '';
+    public description: string = '';
+    public class: string= '';
+    public package: string = '';
+}
+
+export class Tests {
+    public run: number = 1;
+    public ordered: string[] = [];
+    public killing: string[] = [];
+    public succeeding: string[] = [];
+}
+
+export class DescartesMethodReport {
+    public methods: DescartesMethod[] = [];
+    public analysis: DescartesAnalysis = new DescartesAnalysis();
+}
+
+export class DescartesMethod {
+    public name: string = '';
+    public description: string = '';
+    public class: string = '';
+    public package: string = '';
+    public file_name: string = '';
+    public line_number: number = 0;
+    public classification: string = '';
+    public detected: string[] = [];
+    public not_detected: string[] = [];
+    public tests: string[] = [];
+    public mutations: DescartesMutation[] = [];
+}
+
+export class DescartesAnalysis {
+    public time: number = 0;
+    public mutators: string[] = [];
+}
+
+export class DescartesMutation {
+    public status: string = '';
+    public mutator: string = '';
+    public tests_run: number = 0;
+    public tests: string[] = [];
+    public killing_tests: string[] = [];
+    public succeeding_tests: string[] = [];
 }

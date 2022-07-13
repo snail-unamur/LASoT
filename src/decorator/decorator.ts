@@ -1,12 +1,15 @@
 import * as vscode from 'vscode';
 import { MarkdownString } from 'vscode';
-import { Hint, ReneriState, Survivor } from '../reneriState';
+import { DescartesMethod, DescartesMethodReport, DescartesMutation, DescartesState } from '../descartesState';
+import { MutationTestingProvider } from '../explorer/mutationTestingProvider';
+import { Diff, Hint, ReneriState, Survivor } from '../reneriState';
 
 export class Decorator {
 
     public active: boolean = false;
 	public activeEditor = vscode.window.activeTextEditor;
     reneriState: ReneriState;
+	descartesState: DescartesState;
 
     // decorator type used to decorate code pointed by reneri hints
 	reneriHintDecorationType = vscode.window.createTextEditorDecorationType({
@@ -29,7 +32,8 @@ export class Decorator {
 		border: '2px solid white',
 	  });
 
-    constructor(reneriState:ReneriState) {
+    constructor(descartesState: DescartesState,reneriState:ReneriState) {
+		this.descartesState = descartesState;
         this.reneriState = reneriState;
 	    if (this.activeEditor) {
 		    this.triggerUpdateDecorations();
@@ -50,7 +54,7 @@ export class Decorator {
 		}
 	}
 
-    updateDecorations() {
+    async updateDecorations() {
         if (!this.active) {
             return;
         }
@@ -64,35 +68,53 @@ export class Decorator {
 		for(const survivor of this.reneriState.testsObservation.survivors){	
 			for(const hint of survivor.hints){
 				if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
-					const decoration = this.generateDecoration(hint,survivor);
+					const decoration = this.generateTestDecoration(hint,survivor);
 					decorationOptions.push(decoration);
 				}
 			}
 		}
 		
 		for(const survivor of this.reneriState.methodsObservation.survivors){	
-			for(const hint of survivor.hints){
-				if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
-					const decoration = this.generateDecoration(hint,survivor);
-					decorationOptions.push(decoration);
+			for(const diff of survivor.diffs){
+				const descartesMutation = this.descartesState.descartesReports.mutationReport.mutations.filter(m => 
+					m.method.class === survivor.mutation.class 
+					&& m.method.package === survivor.mutation.package
+					&& m.method.name === survivor.mutation.method);
+				const descartesMethod = this.descartesState.descartesReports.methodReport.methods.filter(m => 
+				    m.class === survivor.mutation.class 
+					&& m.package === survivor.mutation.package
+					&& m.name === survivor.mutation.method);
+				if(descartesMutation && descartesMethod){	
+					const f = await vscode.workspace.findFiles('**/src/**/' + descartesMutation[0].file);
+					if(f){
+						if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === f[0].fsPath.toLowerCase()){
+							const range = this.activeEditor.document.lineAt(descartesMutation[0].line-2).range;
+							const decoration = this.generateMethodDecoration(descartesMethod[0],range);
+							decorationOptions.push(decoration);
+						}
+					}
 				}
 			}
 		}
 		
 		this.activeEditor.setDecorations(this.reneriHintDecorationType, decorationOptions);
     }
-
 	
-	generateDecoration(hint: Hint, survivor: Survivor) : vscode.DecorationOptions {
+	generateMethodDecoration(descartesMethod: DescartesMethod, range: vscode.Range) : vscode.DecorationOptions {
+		const hoverMessage = this.generateMethodHoverMessage(descartesMethod);
+		return { range: range, hoverMessage: hoverMessage };
+	}
+
+	generateTestDecoration(hint: Hint, survivor: Survivor) : vscode.DecorationOptions {
 			const from = new vscode.Position(hint.location.from.line-1, hint.location.from.column-1);
 			const to = new vscode.Position(hint.location.to.line-1, hint.location.to.column);
 			const range: vscode.Range = new vscode.Range(from , to);
-			const hoverMessage = this.generateHoverMessage(survivor, hint);
+			const hoverMessage = this.generateTestHoverMessage(survivor, hint);
 			return { range: range, hoverMessage: hoverMessage };
 	}
 
 
-	generateHoverMessage(survivor: Survivor, hint: Hint) : MarkdownString{
+	generateTestHoverMessage(survivor: Survivor, hint: Hint) : MarkdownString{
 		const diff = survivor.diffs.find(d => d.pointcut === hint.pointcut);
 		let markDownString: MarkdownString = new MarkdownString();
 		markDownString.value = `
@@ -104,6 +126,27 @@ export class Decorator {
 		~ Value : ${diff?.unexpected[0].literalValue}
 		~ Type : ${diff?.unexpected[0].typeName}
 		`;
+		return markDownString;
+	}
+	
+	generateMethodHoverMessage(descartesMethod: DescartesMethod) : MarkdownString{
+		let markDownString: MarkdownString = new MarkdownString();
+		markDownString.appendText(`
+		## This method is ${descartesMethod.classification}`);
+		for(const mutation of descartesMethod.mutations){
+			if(mutation.status === 'SURVIVED'){
+				markDownString.appendText(`
+				Undetected mutation : 
+				~ mutator : ${mutation.mutator}
+				~ tests run : ${mutation.tests}`);
+			}
+			if(mutation.status === "KILLED"){
+				markDownString.appendText(`
+				Killed mutation : 
+				~ mutator : ${mutation.mutator}
+				~ tests run : ${mutation.killing_tests}`);	
+			}
+		}
 		return markDownString;
 	}
 }

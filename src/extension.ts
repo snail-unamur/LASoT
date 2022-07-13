@@ -59,6 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
 		oldSurvivorsCount = reneriState.getNumberOfSurvivors();
+		await descartesState.readDescartes();
 		await reneriState.readReneri();
 		decorator.active = true;
 		decorator.triggerUpdateDecorations();
@@ -84,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
 	// --- Decorator
-	const decorator: Decorator = new Decorator(reneriState);
+	const decorator: Decorator = new Decorator(descartesState,reneriState);
 
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		decorator.activeEditor = editor;

@@ -10,8 +10,8 @@ export class ReneriState {
     private fileSystemProvider: FileSystemProvider;
 
     constructor(){
-        this.methodsObservation = new Observation(ObservationType.method);
-        this.testsObservation = new Observation(ObservationType.test);
+        this.methodsObservation = new Observation(ObservationType.methods);
+        this.testsObservation = new Observation(ObservationType.tests);
         this.fileSystemProvider = new FileSystemProvider();
     }
 
@@ -66,12 +66,12 @@ export class ReneriState {
             const testsPath = Settings.getRootPath() + `\\target\\reneri\\observations\\tests`;
             const testsFiles = await this.fileSystemProvider._readDirectory(vscode.Uri.file(testsPath));
             
-            let r = await this.readFiles(testsFiles, ObservationType.test, testsPath);
+            let r = await this.readFiles(testsFiles, ObservationType.tests, testsPath);
             
             const methodsPath = Settings.getRootPath() + `\\target\\reneri\\observations\\methods`;
             const methodsFiles = await this.fileSystemProvider._readDirectory(vscode.Uri.file(methodsPath));
             
-            r = await this.readFiles(methodsFiles, ObservationType.method, methodsPath);
+            r = await this.readFiles(methodsFiles, ObservationType.methods, methodsPath);
         }
         
     }
@@ -83,25 +83,28 @@ export class ReneriState {
     async readFiles(files: [string, vscode.FileType][], observationType:ObservationType, path:string) {
 
         for(const file of files){
-            if(file[1] == vscode.FileType.Directory){
+            if(file[1] === vscode.FileType.Directory){
                 let survivor: Survivor = new Survivor();
-                const folderPath = path + '\\' + file[0];
-                const survivorFiles = await this.fileSystemProvider._readDirectory(vscode.Uri.file(folderPath));
+                //const folderPath = path + '\\' + file[0];
+                const globPattern = `**/target/reneri/observations/${ObservationType[observationType]}/${file[0]}/**/*.json`;
+                const survivorFiles = await vscode.workspace.findFiles(globPattern);
+                //const srvFiles = await vscode.workspace.findFiles('**/*.json',path2);
+                //const survivorFiles = await this.fileSystemProvider._readDirectory(vscode.Uri.file(folderPath));
 
                 for(const f of survivorFiles){
-                    switch(f[0]){
+                    switch(f.path.split('/').pop()){
                         case 'hints.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
                             survivor.hints = JSON.parse(a.getText());
                             break;
                         }
                         case 'diff.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
                             survivor.diffs = JSON.parse(a.getText());
                             break;
                         }
                         case 'mutation.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
                             survivor.mutation = JSON.parse(a.getText());
                             break;
                         }
@@ -109,11 +112,11 @@ export class ReneriState {
                 }
 
                 switch(observationType){
-                    case ObservationType.method: {
+                    case ObservationType.methods: {
                         this.methodsObservation.survivors.push(survivor);
                         break;
                     }
-                    case ObservationType.test: {
+                    case ObservationType.tests: {
                         this.testsObservation.survivors.push(survivor);
                     }
                 }
@@ -123,8 +126,8 @@ export class ReneriState {
 }
 
 enum ObservationType {
-    method,
-    test
+    methods,
+    tests
 }
 
 export class Observation {

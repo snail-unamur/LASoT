@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import { MarkdownString } from 'vscode';
-import { DescartesMethod, DescartesMethodReport, DescartesMutation, DescartesState } from '../descartesState';
-import { MutationTestingProvider } from '../explorer/mutationTestingProvider';
-import { Diff, Hint, ReneriState, Survivor } from '../reneriState';
+import { DescartesMethod, DescartesState } from '../descartesState';
+import { Hint, ReneriState, Survivor } from '../reneriState';
 
 export class Decorator {
 
@@ -61,7 +60,6 @@ export class Decorator {
         if (!this.activeEditor) {
             return;
         }
-        
         
 		const decorationOptions: vscode.DecorationOptions[] = [];
 

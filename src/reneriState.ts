@@ -31,6 +31,9 @@ export class ReneriState {
     }
 
     public async initialize(): Promise<void>{
+        this.methodsObservation = new Observation(ObservationType.methods);
+        this.testsObservation = new Observation(ObservationType.tests);
+
         return this.findFolder().then(files => {
             if(files.length > 0){
                 this._reportFolders = files;
@@ -60,6 +63,8 @@ export class ReneriState {
     }
 
     public async readReneri(){
+
+        await this.initialize();
 
         if(this.folderExists()){
 

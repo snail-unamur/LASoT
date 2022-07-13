@@ -76,21 +76,30 @@ export class Decorator {
 		
 		for(const survivor of this.reneriState.methodsObservation.survivors){	
 			for(const diff of survivor.diffs){
-				const descartesMutation = this.descartesState.descartesReports.mutationReport.mutations.filter(m => 
-					m.method.class === survivor.mutation.class 
-					&& m.method.package === survivor.mutation.package
-					&& m.method.name === survivor.mutation.method);
-				const descartesMethod = this.descartesState.descartesReports.methodReport.methods.filter(m => 
-				    m.class === survivor.mutation.class 
-					&& m.package === survivor.mutation.package
-					&& m.name === survivor.mutation.method);
-				if(descartesMutation && descartesMethod){	
-					const f = await vscode.workspace.findFiles('**/src/**/' + descartesMutation[0].file);
-					if(f){
-						if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === f[0].fsPath.toLowerCase()){
-							const range = this.activeEditor.document.lineAt(descartesMutation[0].line-2).range;
-							const decoration = this.generateMethodDecoration(descartesMethod[0],range);
-							decorationOptions.push(decoration);
+				if(!diff.pointcut.match('^.*history.*$')){
+					const descartesMutation = this.descartesState.descartesReports.mutationReport.mutations.filter(m => 
+						m.method.class === survivor.mutation.class 
+						&& m.method.package === survivor.mutation.package
+						&& m.method.name === survivor.mutation.method);
+					const descartesMethod = this.descartesState.descartesReports.methodReport.methods.filter(m => 
+						m.class === survivor.mutation.class 
+						&& m.package === survivor.mutation.package
+						&& m.name === survivor.mutation.method);
+					if(descartesMutation && descartesMethod){	
+						const f = await vscode.workspace.findFiles('**/src/**/' + descartesMutation[0].file);
+						if(f){
+							if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === f[0].fsPath.toLowerCase()){
+								let l = descartesMutation[0].line;
+								while(!this.activeEditor.document.lineAt(l).text.match('^.*' + descartesMutation[0].method.name + '.*$')){
+									l--;
+									if(l === descartesMutation[0].line-10){
+										break;
+									}
+								}
+								const range = this.activeEditor.document.lineAt(l).range;
+								const decoration = this.generateMethodDecoration(descartesMethod[0],range);
+								decorationOptions.push(decoration);
+							}
 						}
 					}
 				}
@@ -117,7 +126,8 @@ export class Decorator {
 	generateTestHoverMessage(survivor: Survivor, hint: Hint) : MarkdownString{
 		const diff = survivor.diffs.find(d => d.pointcut === hint.pointcut);
 		let markDownString: MarkdownString = new MarkdownString();
-		markDownString.value = `
+		markDownString.value = 
+		`
 		Original Code
 		~ Value : ${diff?.expected[0].literalValue}
 		~ Type : ${diff?.expected[0].typeName}
@@ -131,20 +141,25 @@ export class Decorator {
 	
 	generateMethodHoverMessage(descartesMethod: DescartesMethod) : MarkdownString{
 		let markDownString: MarkdownString = new MarkdownString();
-		markDownString.appendText(`
-		## This method is ${descartesMethod.classification}`);
+		markDownString.appendMarkdown(`
+		** This method is ${descartesMethod.classification} **
+		`);
 		for(const mutation of descartesMethod.mutations){
 			if(mutation.status === 'SURVIVED'){
-				markDownString.appendText(`
+				markDownString.appendMarkdown(
+				`
 				Undetected mutation : 
 				~ mutator : ${mutation.mutator}
-				~ tests run : ${mutation.tests}`);
+				~ tests run : ${mutation.tests}
+				`);
 			}
 			if(mutation.status === "KILLED"){
-				markDownString.appendText(`
+				markDownString.appendMarkdown(
+				`
 				Killed mutation : 
 				~ mutator : ${mutation.mutator}
-				~ tests run : ${mutation.killing_tests}`);	
+				~ tests run : ${mutation.killing_tests}
+				`);	
 			}
 		}
 		return markDownString;

@@ -26,11 +26,6 @@ export class Decorator {
 		}
 	});
 
-	defaultDecorationType = vscode.window.createTextEditorDecorationType({
-		backgroundColor: 'green',
-		border: '2px solid white',
-	  });
-
     constructor(descartesState: DescartesState,reneriState:ReneriState) {
 		this.descartesState = descartesState;
         this.reneriState = reneriState;
@@ -103,10 +98,30 @@ export class Decorator {
 				}
 			}
 		}
+
+		for(const method of this.descartesState.descartesReports.methodReport.methods){
+			if(method.classification === 'not-covered'){
+				const f = await vscode.workspace.findFiles('**/src/**/' + method['file-name']);
+				if(f){
+					if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === f[0].fsPath.toLowerCase()){
+						let l = method['line-number'];
+						while(!this.activeEditor.document.lineAt(l).text.match('^.*' + method.name + '.*$')){
+							l--;
+							if(l === method['line-number']-10){
+								break;
+							}
+						}
+						const range = this.activeEditor.document.lineAt(l).range;
+						const decoration = this.generateMethodDecoration(method,range);
+						decorationOptions.push(decoration);
+					}
+				}
+			}
+		}
 		
 		this.activeEditor.setDecorations(this.reneriHintDecorationType, decorationOptions);
     }
-	
+
 	generateMethodDecoration(descartesMethod: DescartesMethod, range: vscode.Range) : vscode.DecorationOptions {
 		const hoverMessage = this.generateMethodHoverMessage(descartesMethod);
 		return { range: range, hoverMessage: hoverMessage };
@@ -148,16 +163,23 @@ export class Decorator {
 				markDownString.appendMarkdown(
 				`<p><span style="color:#00BE83;">Undetected</span> mutation :</p>
 				<ul>  
-				  <li><span style="color:#00BE83;"> mutator</span> : ${mutation.mutator} </li>  
-				  <li><span style="color:#00BE83;"> tests run</span> : <code>${mutation.tests}</code></li>
+				  <li><span style="color:#00BE83;"> Mutator</span> : ${mutation.mutator} </li>  
+				  <li><span style="color:#00BE83;"> Tests run</span> : <code>${mutation.tests}</code></li>
 				</ul>`);
 			}
 			if(mutation.status === "KILLED"){
 				markDownString.appendMarkdown(
 				`<p><span style="color:#00BE83;">Killed</span> mutation :</p>
 				<ul>  
-				  <li><span style="color:#00BE83;"> mutator</span> : ${mutation.mutator}  </li>
-				  <li><span style="color:#00BE83;"> killing tests</span> : <code>${mutation['killing-tests']}</code>  </li>
+				  <li><span style="color:#00BE83;"> Mutator</span> : ${mutation.mutator}  </li>
+				  <li><span style="color:#00BE83;"> Killing tests</span> : <code>${mutation['killing-tests']}</code>  </li>
+				</ul>`);	
+			}
+			if(mutation.status === "NO_COVERAGE"){
+				markDownString.appendMarkdown(
+				`<p><span style="color:#00BE83;">Not covered</span> mutation :</p>
+				<ul>  
+				  <li><span style="color:#00BE83;"> Mutator</span> : ${mutation.mutator}  </li>
 				</ul>`);	
 			}
 		}

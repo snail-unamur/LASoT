@@ -9,20 +9,20 @@ import * as vscode from 'vscode';
 const resourceDescartesOperators: QuickPickItem[] = ['void', 'null', 'empty', 'new', 'optional','argument','this']
 .map(label => ({ label }));
 const resourceDescartesGoal: QuickPickItem[] = [
-	{ label: 'mutationCoverage', description: 'Will run mutationCoverage', detail: '.........' }
+	{ label: 'mutationCoverage', description: 'Will run mutationCoverage goal from Descartes plugin', detail: 'Descartes evaluates the capability of your test suite to detect bugs using extreme mutation testing.' }
 ];
 
 const resourceReneriObserveMethodsGoal: QuickPickItem[] = [
-	{ label: 'observeMethods', description: 'Will run observeMethods goal.', detail: 'ldfsjsdklfk,d' }
+	{ label: 'observeMethods', description: 'Will run observeMethods goal from Reneri plugin.', detail: 'Observes the execution of the original method and each transformed variant of the method.' }
 ];
 const resourceReneriObserveTestsGoal: QuickPickItem[] = [
-	{ label: 'observeTests', description: 'Will run observeTests goal.', detail: 'sjqdskjqdsqdn' }
+	{ label: 'observeTests', description: 'Will run observeTests goal from Reneri plugin.', detail: 'Observes the execution of each test case for the original methods and the transformed variants.' }
 ];
 const resourceReneriHintsGoal: QuickPickItem[] = [
-	{ label: 'hints', description: 'Will run hints goal.', detail: '' }
+	{ label: 'hints', description: 'Will run hints goal from Reneri plugin', detail: 'Generates improvement hints according to the results obtained with the execution of the two previous goals.' }
 ];
 const resourceLASoT: QuickPickItem[] = [
-	{ label: 'LASoT', description: 'Will highlight reneri hints.', detail: '' }
+	{ label: 'LASoT', description: 'Will highlight methods and tests in your project based on Reneri hints.', detail: 'Brings Descartes and Reneri reported informations into the code.  Methods and tests signaled are decorated.' }
 ];
 
 export class LASoTMultiStepInput {
@@ -69,7 +69,8 @@ export class LASoTMultiStepInput {
 			items: resourceDescartesOperators,
             canSelectMany: true,
 			activeItem: typeof this.state.resourceGroup !== 'string' ? this.state.resourceGroup : undefined,
-			shouldResume: this.shouldResume
+			shouldResume: this.shouldResume,
+			selectedItems: resourceDescartesOperators
 		});
 		this.state.resourceGroup = pick;
 		this.state.step = 1;
@@ -357,6 +358,7 @@ interface QuickPickParameters<T extends QuickPickItem> {
 	placeholder: string;
 	buttons?: QuickInputButton[];
 	shouldResume: () => Thenable<boolean>;
+	selectedItems?: T[];
 }
 
 interface InputBoxParameters {
@@ -408,7 +410,7 @@ class MultiStepInput {
 		}
 	}
 
-	async showQuickPick<T extends QuickPickItem, P extends QuickPickParameters<T>>({ title, step, totalSteps, items, canSelectMany = false, activeItem, placeholder, buttons, shouldResume }: P) {
+	async showQuickPick<T extends QuickPickItem, P extends QuickPickParameters<T>>({ title, step, totalSteps, items, canSelectMany = false, activeItem, placeholder, buttons, shouldResume, selectedItems }: P) {
 		const disposables: Disposable[] = [];
 		try {
 			return await new Promise<T | (P extends { buttons: (infer I)[] } ? I : never)>((resolve, reject) => {
@@ -419,6 +421,9 @@ class MultiStepInput {
 				input.placeholder = placeholder;
 				input.items = items;
                 input.canSelectMany = canSelectMany;
+				if(selectedItems && selectedItems.length > 0){
+					input.selectedItems = selectedItems;
+				}
 				if (activeItem) {
 					input.activeItems = [activeItem];
 				}
@@ -535,22 +540,28 @@ async function configOperators(selectedItems: readonly QuickPickItem[]) {
 			e.edit(async edit => {
 
 			//parse pom.xml to replace mutators config
-			var parser = new xml2js.Parser(/* options */);
-			var res:string='';
-
+			const parser = new xml2js.Parser(/* options */);
+			let res:string='';
+			
+			//remove pom.xml content
+			/*let lineCount = e.document.lineCount;
+			let lastChar = e.document.lineAt(lineCount-1).range.end.character;		
+			edit.delete(new Range(new Position(0,0),new Position(lineCount-1,lastChar)));
+*/
 			parser.parseString(e.document.getText(), function(error,result) {
 				let plugins = result.project.build[0].plugins[0].plugin;
 				for(const plugin of plugins){
 					if(plugin.artifactId[0] === 'pitest-maven'){
 						let configuration = plugin.configuration[0];
+						
 						//remove mutator element
-						if(configuration.mutators[0]){
+						if(configuration['mutators']){
 							delete configuration.mutators[0];
 						} 
-						if(selectedItems.length > 0){
-							var mutators = [{mutator:[]}];
-							var m:string[] = [];
-							for(var i = 0; i < selectedItems.length; i++){
+						if(selectedItems.length > 0 && selectedItems.length !== 7){
+							let mutators = [{mutator:[]}];
+							let m:string[] = [];
+							for(let i = 0; i < selectedItems.length; i++){
 								m[i] = selectedItems[i].label;
 							}
 							mutators[0].mutator = m as never;
@@ -558,18 +569,15 @@ async function configOperators(selectedItems: readonly QuickPickItem[]) {
 						}
 					}
 				}
-				
 				//build xml string from new result object
-				var builder = new xml2js.Builder();
+				const builder = new xml2js.Builder();
 				res = builder.buildObject(result);
 			});
-
-			//remove pom.xml content
-			let lineCount = e.document.lineCount;
-			let lastChar = e.document.lineAt(lineCount-1).range.end.character;				
-			edit.delete(new Range(new Position(0,0),new Position(lineCount-1,lastChar)));
+		
 			//insert complete new pom content in pom.xml
-			edit.insert(new Position(0,0),res);
+			let lineCount = e.document.lineCount;
+			let lastChar = e.document.lineAt(lineCount-1).range.end.character;
+			edit.replace(new Range(new Position(0,0), new Position(lineCount,lastChar)),res);
 			});
 		});
 	}, (error: any) => {

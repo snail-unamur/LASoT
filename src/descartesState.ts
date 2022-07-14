@@ -124,11 +124,11 @@ export class DescartesMethod {
     public description: string = '';
     public class: string = '';
     public package: string = '';
-    public file_name: string = '';
-    public line_number: number = 0;
+    public ['file-name']: string = '';
+    public ['line-number']: number = 0;
     public classification: string = '';
     public detected: string[] = [];
-    public not_detected: string[] = [];
+    public ['not-detected']: string[] = [];
     public tests: string[] = [];
     public mutations: DescartesMutation[] = [];
 }
@@ -141,8 +141,8 @@ export class DescartesAnalysis {
 export class DescartesMutation {
     public status: string = '';
     public mutator: string = '';
-    public tests_run: number = 0;
+    public ['tests-run']: number = 0;
     public tests: string[] = [];
-    public killing_tests: string[] = [];
-    public succeeding_tests: string[] = [];
+    public ['killing-tests']: string[] = [];
+    public ['succeeding_tests']: string[] = [];
 }

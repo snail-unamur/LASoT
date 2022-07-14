@@ -60,7 +60,7 @@ export class Decorator {
         if (!this.activeEditor) {
             return;
         }
-        
+    
 		const decorationOptions: vscode.DecorationOptions[] = [];
 
 		for(const survivor of this.reneriState.testsObservation.survivors){	
@@ -124,42 +124,45 @@ export class Decorator {
 	generateTestHoverMessage(survivor: Survivor, hint: Hint) : MarkdownString{
 		const diff = survivor.diffs.find(d => d.pointcut === hint.pointcut);
 		let markDownString: MarkdownString = new MarkdownString();
-		markDownString.value = 
-		`
-		Original Code
-		~ Value : ${diff?.expected[0].literalValue}
-		~ Type : ${diff?.expected[0].typeName}
-	
-		Undetected Mutation
-		~ Value : ${diff?.unexpected[0].literalValue}
-		~ Type : ${diff?.unexpected[0].typeName}
-		`;
+		markDownString.appendMarkdown( 
+		`<p><span style="color:#00BE83;">Original</span> Code :</p>
+		<ul>
+		<li><span style="color:#00BE83;"> Value </span> : ${diff?.expected[0].literalValue} </li>
+		<li><span style="color:#00BE83;"> Type </span>: ${diff?.expected[0].typeName} </li>
+		</ul><br>
+		<p><span style="color:#00BE83;">Undetected</span> Mutation :</p>
+		<ul>
+		<li><span style="color:#00BE83;"> Value</span> : ${diff?.unexpected[0].literalValue} </li>
+		<li><span style="color:#00BE83;"> Type</span> : ${diff?.unexpected[0].typeName} </li>
+		</ul>`);
+		markDownString.supportHtml = true;
+		markDownString.isTrusted = true;
 		return markDownString;
 	}
 	
 	generateMethodHoverMessage(descartesMethod: DescartesMethod) : MarkdownString{
 		let markDownString: MarkdownString = new MarkdownString();
-		markDownString.appendMarkdown(`
-		** This method is ${descartesMethod.classification} **
-		`);
+		markDownString.appendMarkdown(`<p><em>This method is ${descartesMethod.classification}</em></p>`);
 		for(const mutation of descartesMethod.mutations){
 			if(mutation.status === 'SURVIVED'){
 				markDownString.appendMarkdown(
-				`
-				Undetected mutation : 
-				~ mutator : ${mutation.mutator}
-				~ tests run : ${mutation.tests}
-				`);
+				`<p><span style="color:#00BE83;">Undetected</span> mutation :</p>
+				<ul>  
+				  <li><span style="color:#00BE83;"> mutator</span> : ${mutation.mutator} </li>  
+				  <li><span style="color:#00BE83;"> tests run</span> : <code>${mutation.tests}</code></li>
+				</ul>`);
 			}
 			if(mutation.status === "KILLED"){
 				markDownString.appendMarkdown(
-				`
-				Killed mutation : 
-				~ mutator : ${mutation.mutator}
-				~ tests run : ${mutation.killing_tests}
-				`);	
+				`<p><span style="color:#00BE83;">Killed</span> mutation :</p>
+				<ul>  
+				  <li><span style="color:#00BE83;"> mutator</span> : ${mutation.mutator}  </li>
+				  <li><span style="color:#00BE83;"> killing tests</span> : <code>${mutation['killing-tests']}</code>  </li>
+				</ul>`);	
 			}
 		}
+		markDownString.supportHtml = true;
+		markDownString.isTrusted = true;
 		return markDownString;
 	}
 }

@@ -49,7 +49,7 @@ export class LASoTMultiStepInput {
 				break;
 			}
 			case 5: {
-				await this.multiStepInput.run(() => this.ShowHints(this.multiStepInput));
+				await this.multiStepInput.run(() => this.showHints(this.multiStepInput));
 				break;
 			}
 			default: {
@@ -265,10 +265,10 @@ export class LASoTMultiStepInput {
 			progress.report({ increment: 100 });
 		});
 
-		return (input: MultiStepInput) => this.ShowHints(input);
+		return (input: MultiStepInput) => this.showHints(input);
 	}
 	
-    public async ShowHints(input: MultiStepInput) {
+    public async showHints(input: MultiStepInput) {
 		const pick = await input.showQuickPick({
 			title: 'LASoT',
 			step: 6,

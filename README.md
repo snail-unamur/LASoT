@@ -1,6 +1,6 @@
 # lasot README
 
-This is the README for your extension "lasot". After writing up a brief description, we recommend including the following sections.
+LASoT Plugin
 
 ## Features
 

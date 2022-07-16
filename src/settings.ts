@@ -17,7 +17,7 @@ export namespace Settings {
         {name:'optional',description:'This operator accepts any method whose return type is java.util.Optional. It replaces the code of the method by a single instruction returning an empty instance.'},
         {name:'argument',description:'This operator replaces the body of a method by returning the value of the first parameter that has the same type as the return type of the method.'},
         {name:'this',description:'Replaces the body of a method by return this; if applicable. The goal of this operator is to perform better transformations targeting fluent APIs.'},
-    ]
+    ];
 
     export function getRootPath() : string | undefined {        
         const rootPath = 

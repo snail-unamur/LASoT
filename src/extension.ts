@@ -65,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		decorator.triggerUpdateDecorations();
 		updateStatusBarItem();
 		const n = reneriState.getNumberOfSurvivors();
-		if(n == 0) {
+		if(n === 0) {
 			vscode.window.showInformationMessage(`Yeah, no more survivors! Congratulations!`);
 		}else if(n > 0) {
 			if(n < oldSurvivorsCount) {
@@ -82,7 +82,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		'mutationTesting',
 		new MutationTestingProvider()
 	);
-
 
 	// --- Decorator
 	const decorator: Decorator = new Decorator(descartesState,reneriState);

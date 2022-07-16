@@ -270,7 +270,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
 		}
 
-		if(vscode.workspace.workspaceFolders != undefined)
+		if(vscode.workspace.workspaceFolders !== undefined)
 		{
 			const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
 			if (workspaceFolder) {

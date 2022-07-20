@@ -82,14 +82,14 @@ export class ReneriState {
     }
 
     getNumberOfSurvivors(){
-        return this.testsObservation.survivors.length;
+        return this.testsObservation.signaledMethods.length;
     }
     
     async readFiles(files: [string, vscode.FileType][], observationType:ObservationType, path:string) {
 
         for(const file of files){
             if(file[1] === vscode.FileType.Directory){
-                let survivor: Survivor = new Survivor();
+                let survivor: SignaledMethod = new SignaledMethod();
                 //const folderPath = path + '\\' + file[0];
                 const globPattern = `**/target/reneri/observations/${ObservationType[observationType]}/${file[0]}/**/*.json`;
                 const survivorFiles = await vscode.workspace.findFiles(globPattern);
@@ -118,11 +118,11 @@ export class ReneriState {
 
                 switch(observationType){
                     case ObservationType.methods: {
-                        this.methodsObservation.survivors.push(survivor);
+                        this.methodsObservation.signaledMethods.push(survivor);
                         break;
                     }
                     case ObservationType.tests: {
-                        this.testsObservation.survivors.push(survivor);
+                        this.testsObservation.signaledMethods.push(survivor);
                     }
                 }
             }  
@@ -137,14 +137,14 @@ enum ObservationType {
 
 export class Observation {
     private type: ObservationType;
-    public survivors: Survivor[] = [];
+    public signaledMethods: SignaledMethod[] = [];
 
     constructor(observationType: ObservationType){
         this.type = observationType;
     }
 }
 
-export class Survivor {
+export class SignaledMethod {
     public diffs: Diff[] = [];
     public hints: Hint[] = [];
     public mutation: Mutation = new Mutation();

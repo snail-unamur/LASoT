@@ -3,11 +3,15 @@ import { getVSCodeDownloadUrl } from '@vscode/test-electron/out/util';
 import { QuickPickItem, window, Disposable, CancellationToken, QuickInputButton, QuickInput, ExtensionContext, QuickInputButtons, Uri, TextDocument, workspace, Position, Range } from 'vscode';
 import * as xml2js from 'xml2js';
 import { Settings } from '../settings';
-import { Utils } from '../utils/utils';
 import * as vscode from 'vscode';
+import { DescartesState } from '../descartesState';
+import { ReneriState } from '../reneriState';
+import { updateStatusBarItem } from '../extension';
+import { Utils } from '../utils/utils';
 
-const resourceDescartesOperators: QuickPickItem[] = ['void', 'null', 'empty', 'new', 'optional','argument','this']
+const resourceDescartesOperators: QuickPickItem[] = ['void', 'null', 'empty', 'new', 'optional','argument','this','constant']
 .map(label => ({ label }));
+const resourceDescartesOperatorsConstant: string[] = ["true", "false","0","1","(short)0","(short)1","(byte)0","(byte)1","0L","1L","0.0","1.0","0.0f","1.0f","'\\40'","'A'","\"\"","\"A\""];
 const resourceDescartesGoal: QuickPickItem[] = [
 	{ label: 'mutationCoverage', description: 'Will run mutationCoverage goal from Descartes plugin', detail: 'Descartes evaluates the capability of your test suite to detect bugs using extreme mutation testing.' }
 ];
@@ -26,34 +30,42 @@ const resourceLASoT: QuickPickItem[] = [
 ];
 
 export class LASoTMultiStepInput {
+
+	private descartesState: DescartesState;
+	private reneriState: ReneriState;
+
+	constructor(descartesState:DescartesState,reneriState:ReneriState){
+		this.descartesState = descartesState;
+		this.reneriState = reneriState;
+	}
     
 	multiStepInput:MultiStepInput = new MultiStepInput();
 	state = {} as Partial<State>;
 
 	public async collectInputs() {
 		switch(this.state.step){
-			case 1: {
+			/*case 1: {
 				await this.multiStepInput.run(() => this.runDescartesMutationCoverage(this.multiStepInput));
 			break;
-			}
-			case 2: {
+			}*/
+			case 1: {
 				await this.multiStepInput.run(() => this.runReneriObserveMethodsGoal(this.multiStepInput));
 				break;
 			}
-			case 3: {
+			case 2: {
 				await this.multiStepInput.run(() => this.runReneriObserveTestsGoal(this.multiStepInput));
 				break;
 			}
-			case 4: {
+			case 3: {
 				await this.multiStepInput.run(() => this.runReneriHintsGoal(this.multiStepInput));
 				break;
 			}
-			case 5: {
+			case 4: {
 				await this.multiStepInput.run(() => this.showHints(this.multiStepInput));
 				break;
 			}
 			default: {
-				await this.multiStepInput.run(() => this.pickDescartesOperators(this.multiStepInput));
+				await this.multiStepInput.run(() => this.runDescartesMutationCoverage(this.multiStepInput));
 			}
 		}
 		
@@ -80,8 +92,8 @@ export class LASoTMultiStepInput {
     public async runDescartesMutationCoverage(input: MultiStepInput) {
 		const pick = await input.showQuickPick({
 			title: 'Descartes',
-			step: 2,
-			totalSteps: 6,
+			step: 1,
+			totalSteps: 5,
 			placeholder: 'Run Descartes mutationCoverage goal',
 			items: resourceDescartesGoal,
             canSelectMany: false,
@@ -89,10 +101,10 @@ export class LASoTMultiStepInput {
 			shouldResume: this.shouldResume
 		});
 		this.state.resourceGroup = pick;
-		this.state.step = 2;
+		this.state.step = 1;
 		
 		let terminal: unknown;
-		vscode.commands.executeCommand('executeGoal', null, Settings.DESCARTES_MUTATION_COVERAGE,true,false,true).then(t => {
+		await vscode.commands.executeCommand('executeGoal', null, Settings.DESCARTES_MUTATION_COVERAGE,true,false,true).then(t => {
 			terminal = t;
 		});
 
@@ -101,12 +113,10 @@ export class LASoTMultiStepInput {
 		}*/
 
 		await vscode.window.withProgress({
-			location: vscode.ProgressLocation.Window,
-			cancellable: false,
+			location: vscode.ProgressLocation.Notification,
+			cancellable: true,
 			title: 'Executing mutationCoverage goal'
 		}, async (progress) => {
-			
-			progress.report({  increment: 0 });
 		
 			await new Promise((resolve, reject) => {
 				const disposeToken = vscode.window.onDidCloseTerminal(async (closedTerminal) => {
@@ -120,11 +130,13 @@ export class LASoTMultiStepInput {
 					}
 				});
 			});
-		
-			progress.report({ increment: 100 });
-		});
 
-		//await this.awaitGoalExecution(terminal as vscode.Terminal);
+			await Utils.delay(2000);
+			
+			await this.descartesState.initialize();
+			await this.descartesState.copyReportFilesToTargetFolder();
+			updateStatusBarItem();
+		});
 
 		return (input: MultiStepInput) => this.runReneriObserveMethodsGoal(input);
 	}
@@ -132,8 +144,8 @@ export class LASoTMultiStepInput {
     public async runReneriObserveMethodsGoal(input: MultiStepInput) {
 		const pick = await input.showQuickPick({
 			title: 'Reneri',
-			step: 3,
-			totalSteps: 6,
+			step: 2,
+			totalSteps: 5,
 			placeholder: 'Run Reneri observeMethods goal',
 			items: resourceReneriObserveMethodsGoal,
             canSelectMany: false,
@@ -141,20 +153,18 @@ export class LASoTMultiStepInput {
 			shouldResume: this.shouldResume
 		});
 		this.state.resourceGroup = pick;
-		this.state.step = 3;
+		this.state.step = 2;
 		
 		let terminal: unknown;
-		vscode.commands.executeCommand('executeGoal', null, Settings.DESCARTES_MUTATION_COVERAGE,true,false,true).then(t => {
+		await vscode.commands.executeCommand('executeGoal', null, Settings.RENERI_OBSERVE_METHODS,true,false,true).then(t => {
 			terminal = t;
 		});
 
 		await vscode.window.withProgress({
-			location: vscode.ProgressLocation.Notification,//vscode.ProgressLocation.Window,
+			location: vscode.ProgressLocation.Notification,
 			cancellable: false,
 			title: 'Executing Reneri observeMethods goal..'
 		}, async (progress) => {
-			
-			progress.report({  increment: 0 });
 		
 			await new Promise((resolve, reject) => {
 				const disposeToken = vscode.window.onDidCloseTerminal(async (closedTerminal) => {
@@ -168,8 +178,6 @@ export class LASoTMultiStepInput {
 					}
 				});
 			});
-		
-			progress.report({ increment: 100 });
 		});
 
 		return (input: MultiStepInput) => this.runReneriObserveTestsGoal(input);
@@ -178,8 +186,8 @@ export class LASoTMultiStepInput {
     public async runReneriObserveTestsGoal(input: MultiStepInput) {
 		const pick = await input.showQuickPick({
 			title: 'Reneri',
-			step: 4,
-			totalSteps: 6,
+			step: 3,
+			totalSteps: 5,
 			placeholder: 'Run Reneri observeTests goal',
 			items: resourceReneriObserveTestsGoal,
             canSelectMany: false,
@@ -187,10 +195,10 @@ export class LASoTMultiStepInput {
 			shouldResume: this.shouldResume
 		});
 		this.state.resourceGroup = pick;
-		this.state.step = 4;
+		this.state.step = 3;
 		
 		let terminal: unknown;
-		vscode.commands.executeCommand('executeGoal', null, Settings.DESCARTES_MUTATION_COVERAGE,true,false,true).then(t => {
+		vscode.commands.executeCommand('executeGoal', null, Settings.RENERI_OBSERVE_TESTS,true,false,true).then(t => {
 			terminal = t;
 		});
 
@@ -200,8 +208,6 @@ export class LASoTMultiStepInput {
 			cancellable: false,
 			title: 'Executing Reneri observeTests goal'
 		}, async (progress) => {
-			
-			progress.report({  increment: 0 });
 		
 			await new Promise((resolve, reject) => {
 				const disposeToken = vscode.window.onDidCloseTerminal(async (closedTerminal) => {
@@ -215,8 +221,6 @@ export class LASoTMultiStepInput {
 					}
 				});
 			});
-		
-			progress.report({ increment: 100 });
 		});
 
 		return (input: MultiStepInput) => this.runReneriHintsGoal(input);
@@ -225,8 +229,8 @@ export class LASoTMultiStepInput {
     public async runReneriHintsGoal(input: MultiStepInput) {
 		const pick = await input.showQuickPick({
 			title: 'Reneri',
-			step: 5,
-			totalSteps: 6,
+			step: 4,
+			totalSteps: 5,
 			placeholder: 'Run Reneri hints goal',
 			items: resourceReneriHintsGoal,
             canSelectMany: false,
@@ -234,10 +238,10 @@ export class LASoTMultiStepInput {
 			shouldResume: this.shouldResume
 		});
 		this.state.resourceGroup = pick;
-		this.state.step = 5;
+		this.state.step = 4;
 		
 		let terminal: unknown;
-		vscode.commands.executeCommand('executeGoal', null, Settings.DESCARTES_MUTATION_COVERAGE,true,false,true).then(t => {
+		vscode.commands.executeCommand('executeGoal', null, Settings.RENERI_HINTS,true,false,true).then(t => {
 			terminal = t;
 		});
 
@@ -246,8 +250,6 @@ export class LASoTMultiStepInput {
 			cancellable: false,
 			title: 'Executing Reneri hints goal'
 		}, async (progress) => {
-			
-			progress.report({  increment: 0 });
 		
 			await new Promise((resolve, reject) => {
 				const disposeToken = vscode.window.onDidCloseTerminal(async (closedTerminal) => {
@@ -261,8 +263,6 @@ export class LASoTMultiStepInput {
 					}
 				});
 			});
-		
-			progress.report({ increment: 100 });
 		});
 
 		return (input: MultiStepInput) => this.showHints(input);
@@ -271,8 +271,8 @@ export class LASoTMultiStepInput {
     public async showHints(input: MultiStepInput) {
 		const pick = await input.showQuickPick({
 			title: 'LASoT',
-			step: 6,
-			totalSteps: 6,
+			step: 5,
+			totalSteps: 5,
 			placeholder: 'Show Hints',
 			items: resourceLASoT,
             canSelectMany: false,
@@ -280,7 +280,7 @@ export class LASoTMultiStepInput {
 			shouldResume: this.shouldResume
 		});
 		this.state.resourceGroup = pick;
-		this.state.step = 6;
+		this.state.step = 5;
 		
 		vscode.commands.executeCommand('lasot.highlightsHints');
 
@@ -558,11 +558,19 @@ async function configOperators(selectedItems: readonly QuickPickItem[]) {
 						if(configuration['mutators']){
 							delete configuration.mutators[0];
 						} 
-						if(selectedItems.length > 0 && selectedItems.length !== 7){
+						if(selectedItems.length > 0 && selectedItems.length !== 8){
 							let mutators = [{mutator:[]}];
 							let m:string[] = [];
 							for(let i = 0; i < selectedItems.length; i++){
-								m[i] = selectedItems[i].label;
+								if(selectedItems[i].label === 'constant'){
+									for(let j = 0; j < resourceDescartesOperatorsConstant.length; j++){
+										m[i+j] = resourceDescartesOperatorsConstant[j];
+									}
+									i += resourceDescartesOperatorsConstant.length-1;
+								}
+								else{
+									m[i] = selectedItems[i].label;
+								}
 							}
 							mutators[0].mutator = m as never;
 							configuration['mutators'] = mutators;

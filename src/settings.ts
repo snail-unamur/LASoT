@@ -18,6 +18,22 @@ export namespace Settings {
         {name:'argument',description:'This operator replaces the body of a method by returning the value of the first parameter that has the same type as the return type of the method.'},
         {name:'this',description:'Replaces the body of a method by return this; if applicable. The goal of this operator is to perform better transformations targeting fluent APIs.'},
     ];
+    export const DESCARTES_MUTATORS = {
+    };
+
+    export function getMutatorDescription(mutator:string){
+        switch(mutator){
+            case 'void': {return "Removed all instructions in the method.";}
+            case 'null': {return "All method instructions replaced by: return null.";}
+            case 'empty': {return "All method instructions replaced by: return empty array of the corresponding type.";}
+            case 'constant': {return "All method instructions replaced by: return ";}
+            case 'new': {return "All method instructions replaced by: single instruction returning a new instance.";}
+            case 'optional': {return "All method instructions replaced by: single instruction returning an empty instance.";}
+            case 'argument': {return "All method instructions replaced by: return value of the first parameter that has the same type as the return type of the method.";}
+            case 'this': {return "All method instructions replaced by: return this.";}
+            default: {return "";}
+        }
+    }
 
     export function getRootPath() : string | undefined {        
         const rootPath = 

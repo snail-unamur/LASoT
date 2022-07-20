@@ -35,7 +35,8 @@ export class Goal extends vscode.TreeItem {
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly ctxValue: string,
-		public readonly command?: vscode.Command
+		public readonly command?: vscode.Command,
+    public readonly exit?: boolean
   ) {
     super(label, collapsibleState);
     this.tooltip = `${this.label}`;
@@ -70,7 +71,7 @@ function getCommandsInMenu(label: string | vscode.TreeItemLabel | undefined): vs
         title: 'mutationCoverage'
       }
       ];
-    return DEFAULT_DESCARTES_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'goal', command));
+    return DEFAULT_DESCARTES_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'goal', command,true));
   }
   else if(label === "Reneri"){
     const DEFAULT_RENERI_COMMANDS: vscode.Command[] = [

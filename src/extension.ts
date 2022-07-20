@@ -8,11 +8,14 @@ import { DescartesState } from './descartesState';
 import { ReneriState } from './reneriState';
 import { LASoTMultiStepInput } from './quickpicks/lasotMultiStepInput';
 import { Settings } from "./settings";
+import { FileSystemProvider } from './utils/fileExplorer';
+import { Utils } from './utils/utils';
 
 let myStatusBarItem: vscode.StatusBarItem;
 let oldSurvivorsCount: number = 0;
 let descartesState: DescartesState = new DescartesState();
 let reneriState: ReneriState = new ReneriState();
+const fileSystemProvider: FileSystemProvider = new FileSystemProvider();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -35,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	await descartesState.initialize();
 	await reneriState.initialize();
 
-    vscode.commands.registerCommand('executeGoal', (node?: Goal, goal?:string, exit?:boolean, hidden?:boolean, preserveFocus?:boolean) : vscode.Terminal => {
+    vscode.commands.registerCommand('executeGoal', async (node?: Goal, goal?:string, exit?:boolean, hidden?:boolean, preserveFocus?:boolean, title?:string) : Promise<vscode.Terminal> => {
 		let goalString: string = '';
 		if(node && node.command?.command){
 			goalString = node.command?.command;
@@ -45,36 +48,78 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 
 		let exitString:string="";
-		if(exit){
+		if(exit || (node && node.exit)){
 			exitString = ";exit";
 		}
-
+		
 		const terminal = vscode.window.createTerminal(`Ext Terminal #${NEXT_TERM_ID++}`);
-		if(!hidden){
-			terminal.show(preserveFocus);
-		}
-		terminal.sendText(`& "${mavenExecutablePath}" ${goalString} -f "${pomPath}" ${exitString}`);
+		
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Window,
+			title: `Executing ${(node?node.command?.title:title)} goal`,
+			cancellable: true
+		}, async (progress, token) => {
+			token.onCancellationRequested(() => {
+				console.log("User canceled the long running operation");
+			});
+
+			progress.report({ increment: 0 });
+
+			if(!hidden){
+				terminal.show(preserveFocus);
+			}
+			terminal.sendText(`& "${mavenExecutablePath}" ${goalString} -f "${pomPath}" ${exitString}`);
+	
+			progress.report({ increment: 20, message: "In progress.." });
+
+			if((node && node.exit) || exit){
+				await new Promise((resolve, reject) => {
+					const disposeToken = vscode.window.onDidCloseTerminal(async (closedTerminal) => {
+						if (closedTerminal === terminal) {
+							  disposeToken.dispose();
+							  if ((terminal as vscode.Terminal).exitStatus !== undefined) {
+								resolve((terminal as vscode.Terminal).exitStatus);
+							  } else {
+								reject("Terminal exited with undefined status");
+							  }
+						}
+					});
+				});
+				
+				progress.report({ increment: 50, message: "In progress.." });
+	
+				await Utils.delay(2000);
+
+				progress.report({ increment: 65, message: "Preparing files for Reneri plugin.." });
+	
+				if(node && node.command?.title === "mutationCoverage" || goal === "org.pitest:pitest-maven:mutationCoverage"){
+					await descartesState.initialize();
+					await descartesState.copyReportFilesToTargetFolder();
+					updateStatusBarItem();
+				}
+			}
+
+			progress.report({ increment: 80, message: "In progress.." });
+			
+			const p = new Promise<void>(resolve => {
+				setTimeout(() => {
+					resolve();
+				}, 2000);
+			});
+			
+			progress.report({ increment: 100, message: "Done" });
+
+			return p;
+		});
+
 		return terminal;
 	});
 	
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
 		oldSurvivorsCount = reneriState.getNumberOfSurvivors();
-		await descartesState.readDescartes();
 		await reneriState.readReneri();
 		decorator.active = true;
 		decorator.triggerUpdateDecorations();
-		updateStatusBarItem();
-		const n = reneriState.getNumberOfSurvivors();
-		if(n === 0) {
-			vscode.window.showInformationMessage(`Yeah, no more survivors! Congratulations!`);
-		}else if(n > 0) {
-			if(n < oldSurvivorsCount) {
-				vscode.window.showInformationMessage(`This is better! There are still ${n} survivors... Keep going!`);
-			} 
-			else {
-				vscode.window.showInformationMessage(`Oups, There are more survivors than the last time!`);
-			}
-		}
 	});
 
 	// --- TreeView
@@ -82,6 +127,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		'mutationTesting',
 		new MutationTestingProvider()
 	);
+
+	vscode.commands.registerCommand('mutationTesting.refresh', async () => {
+    	await descartesState.initialize();
+		await reneriState.initialize();
+		updateStatusBarItem();
+	});
 
 	// --- Decorator
 	const decorator: Decorator = new Decorator(descartesState,reneriState);
@@ -100,21 +151,39 @@ export async function activate(context: vscode.ExtensionContext) {
 	}, null, context.subscriptions);
 
 	// --- MultistepInput
-    const lasotMultiStepInput: LASoTMultiStepInput = new LASoTMultiStepInput();
+    const lasotMultiStepInput: LASoTMultiStepInput = new LASoTMultiStepInput(descartesState,reneriState);
 
 	context.subscriptions.push(commands.registerCommand('lasot.wizard', async () => {
 		lasotMultiStepInput.collectInputs();
 		//multiStepInput(context).catch(console.error);
 	}));
 
+	vscode.commands.registerCommand('executeMultiStepGoal', async (node?: Goal, goal?:string, exit?:boolean, hidden?:boolean, preserveFocus?:boolean) : Promise<vscode.Terminal> => {
+
+		let exitString:string="";
+		if(exit || (node && node.exit)){
+			exitString = ";exit";
+		}
+		
+		const terminal = vscode.window.createTerminal(`Ext Terminal #${NEXT_TERM_ID++}`);
+		
+		if(!hidden){
+			terminal.show(preserveFocus);
+		}
+
+		terminal.sendText(`& "${mavenExecutablePath}" ${goal} -f "${pomPath}" ${exitString}`);
+
+		return terminal;
+	});
+
 	// --- Status bar
 	const myCommandId = 'lasot.showSurvivorsCount';
 	context.subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
-		let text: string = 'Pseudo tested methods found on ';
-		for(const survivor of reneriState.testsObservation.survivors){
-			text += survivor.mutation.class.toString() + ':' + survivor.mutation.method.toString() + ',';
+		let text: string = 'Survived mutations : \n';
+		for(const survivor of descartesState.getSurvivors()){
+			text += '- Mutator : ' + survivor.mutator.toString() + ' on "' + survivor.file + '/' + survivor.method.name.toString() + '\n';
 		}
-		vscode.window.showInformationMessage(text);
+		vscode.window.showInformationMessage(text, { modal:true });
 	}));
 
 	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -127,14 +196,10 @@ export async function activate(context: vscode.ExtensionContext) {
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-function updateStatusBarItem(): void {
-	const n = reneriState.getNumberOfSurvivors();
-	if (n > 0) {
-		myStatusBarItem.text = `$(bug) ${n} survivor(s)`;
-		myStatusBarItem.show();
-	} else {
-		myStatusBarItem.hide();
-	}
+export function updateStatusBarItem(): void {
+	const n = descartesState.getSurvivors().length;
+	myStatusBarItem.text = `$(bug) ${n} survivor(s)`;
+	myStatusBarItem.show();
 }
 
 

@@ -26,8 +26,17 @@
         "icon": "$(play)"
       },
       {
+        "command": "executeMultiStepGoal",
+        "title": "execute goal"
+      },
+      {
         "command": "lasot.wizard",
         "title": "LASoT Wizard"
+      },
+      {
+        "command": "mutationTesting.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
       }
     ],
     "views": {
@@ -39,6 +48,13 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+            "command": "mutationTesting.refresh",
+            "when": "view == mutationTesting",
+            "group": "navigation"
+        }
+      ],
       "view/item/context": [
         {
           "command": "executeGoal",
@@ -46,12 +62,9 @@
           "group": "inline"
         },
         {
-          "command": "executeGoal",
-          "when": "view == mutationTesting && viewItem == goal"
-        },
-        {
           "command": "lasot.highlightsHints",
-          "when": "view == mutationTesting && viewItem == lasot"
+          "when": "view == mutationTesting && viewItem == lasot",
+          "group": "inline"
         }
       ]
     }

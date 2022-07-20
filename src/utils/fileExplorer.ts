@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as rimraf from 'rimraf';
+import { Settings } from '../settings';
+import { Context } from 'mocha';
 
 //#region Utilities
 
@@ -191,9 +193,14 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 	}
 
 	async _readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+		const result: [string, vscode.FileType][] = [];
+
+		if(!await _.exists(uri.fsPath)){
+			return Promise.resolve(result);
+		}
+
 		const children = await _.readdir(uri.fsPath);
 
-		const result: [string, vscode.FileType][] = [];
 		for (let i = 0; i < children.length; i++) {
 			const child = children[i];
 			const stat = await this._stat(path.join(uri.fsPath, child));
@@ -295,6 +302,23 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 			treeItem.contextValue = 'file';
 		}
 		return treeItem;
+	}
+
+	
+	static async copyFile(sourcePath:string,destPath:string) : Promise<boolean>{
+		try {
+		const wsedit = new vscode.WorkspaceEdit();
+		const wsPath = Settings.getRootPath();
+		const data = await vscode.workspace.fs.readFile(
+			vscode.Uri.file(wsPath + sourcePath)
+		);
+		const filePath = vscode.Uri.file(wsPath + destPath);
+		wsedit.createFile(filePath, { overwrite: true, ignoreIfExists: false });
+		await vscode.workspace.fs.writeFile(filePath, data);
+		return true;//await vscode.workspace.applyEdit(wsedit);
+		} catch (err) {
+			return false;
+		}
 	}
 }
 

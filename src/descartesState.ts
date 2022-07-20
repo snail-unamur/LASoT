@@ -5,6 +5,7 @@ import { FileExplorer, FileSystemProvider } from './utils/fileExplorer';
 export class DescartesState {
     private _reportFolders: [string, vscode.FileType][] | undefined;
     public descartesReports: DescartesReports = new DescartesReports();
+    private survivors: DescartesMutationFull[] = [];
 
     public folderExists():boolean{
         if(this._reportFolders){
@@ -23,9 +24,10 @@ export class DescartesState {
     }
 
     public async initialize(): Promise<void>{
-        return this.findFolder().then(files => {
-            if(files.length > 0){
+        return this.findFolder().then(async files => {
+            if(files.length >= 0){
                 this._reportFolders = files;
+                await this.readDescartes();
             }
         });
     }
@@ -52,6 +54,8 @@ export class DescartesState {
     }
 
     public async readDescartes(){
+        this.descartesReports = new DescartesReports();
+        this.survivors = [];
 
         if(this.folderExists()){
             const lastReportFolder = this.getLastReportFolder();
@@ -72,10 +76,36 @@ export class DescartesState {
                         }
                     }
                 }
+
+                this.registerSurvivors();
             }
             
         }
     }
+    
+    public getSurvivors():DescartesMutationFull[] {
+        return this.survivors;
+    }
+
+    private registerSurvivors() {
+        this.survivors = [];
+        for(const mutation of this.descartesReports.mutationReport.mutations){
+            if(mutation.status === 'SURVIVED'){
+                this.survivors.push(mutation);
+            }
+        }
+    }
+
+    public async copyReportFilesToTargetFolder(): Promise<boolean>{
+        const lastReportFolder = this.getLastReportFolder();
+        let result = false;
+        if(lastReportFolder){
+            result = await FileSystemProvider.copyFile(`\\target\\pit-reports\\${lastReportFolder[0]}\\mutations.json`, `\\target\\mutations.json`);
+            result = await FileSystemProvider.copyFile(`\\target\\pit-reports\\${lastReportFolder[0]}\\methods.json`, `\\target\\methods.json`);
+        }
+        return result;
+    }
+
 }
 
 export class DescartesReports {

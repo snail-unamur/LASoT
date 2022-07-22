@@ -27,12 +27,15 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.window.showErrorMessage("pom.xml not found.  Install maven plugin.");
 	}
 
-	let mavenExecutablePath = Settings.getMavenExecutablePath();
+	let mavenExecutablePath = await Settings.getMavenWrapper();
 	if(mavenExecutablePath === undefined){
-		vscode.window.showErrorMessage("Configure maven.executable.path in settings.json file.");
-	}
-	else{
-		mavenExecutablePath = mavenExecutablePath.concat('.cmd');
+		let mavenExecutablePath = Settings.getMavenExecutablePath();
+		if(mavenExecutablePath === undefined){
+			vscode.window.showErrorMessage("Configure maven.executable.path in settings.json file.");
+		}
+		else{
+			mavenExecutablePath = mavenExecutablePath.concat('.cmd');
+		}
 	}
 
 	await descartesState.initialize();
@@ -118,8 +121,12 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
 		oldSurvivorsCount = reneriState.getNumberOfSurvivors();
 		await reneriState.readReneri();
-		decorator.active = true;
+		decorator.activate();
 		decorator.triggerUpdateDecorations();
+	});
+
+    vscode.commands.registerCommand('lasot.DeactivateHighlights', async () => {
+		decorator.deactivate();
 	});
 
 	// --- TreeView

@@ -16,6 +16,11 @@
   "contributes": {
     "commands": [
       {
+        "command": "lasot.DeactivateHighlights",
+        "title": "Highlights Hints",
+        "icon": "$(stop)"
+      },
+      {
         "command": "lasot.highlightsHints",
         "title": "Highlights Hints",
         "icon": "$(play)"
@@ -50,15 +55,20 @@
     "menus": {
       "view/title": [
         {
-            "command": "mutationTesting.refresh",
-            "when": "view == mutationTesting",
-            "group": "navigation"
+          "command": "mutationTesting.refresh",
+          "when": "view == mutationTesting",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
         {
           "command": "executeGoal",
           "when": "view == mutationTesting && viewItem == goal",
+          "group": "inline"
+        },
+        {
+          "command": "lasot.DeactivateHighlights",
+          "when": "view == mutationTesting && viewItem == lasot",
           "group": "inline"
         },
         {

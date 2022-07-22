@@ -1,6 +1,7 @@
 
 import path = require('path');
 import * as vscode from 'vscode';
+import { FileExplorer } from './utils/fileExplorer';
 
 export namespace Settings {
 
@@ -50,7 +51,15 @@ export namespace Settings {
 
     export function getMavenExecutablePath() : string | undefined {        
         const mavenConfig = vscode.workspace.getConfiguration('maven');
-        return mavenConfig.get('executable.path');    
+        return mavenConfig.get('executable.path'); 
+    }
+
+    export async function getMavenWrapper() : Promise<string | undefined> { 
+        const files = await vscode.workspace.findFiles('mvnw.cmd'); 
+        if(files.length > 0){
+            return './mvnw.cmd';
+        }
+        return undefined;
     }
 
     export class MutationOperator {

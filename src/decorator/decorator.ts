@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { MarkdownString } from 'vscode';
-import { DescartesMethod, DescartesState } from '../descartesState';
+import { DescartesMethod, DescartesMutationFull, DescartesState } from '../descartesState';
 import { Hint, ReneriState, SignaledMethod } from '../reneriState';
 import { Settings } from '../settings';
 
 export class Decorator {
 
-    public active: boolean = false;
+    private active: boolean = false;
 	public activeEditor = vscode.window.activeTextEditor;
     reneriState: ReneriState;
 	descartesState: DescartesState;
@@ -37,6 +37,19 @@ export class Decorator {
 
 	timeout: NodeJS.Timer | undefined = undefined;
 
+	deactivate(){
+		this.active = false;
+        if (!this.activeEditor) {
+            return;
+        }
+		const decorationOptions: vscode.DecorationOptions[] = [];
+		this.activeEditor.setDecorations(this.reneriHintDecorationType, decorationOptions);
+	}
+
+	activate(){
+		this.active = true;
+	}
+
 	triggerUpdateDecorations(throttle = false) {
 		if (this.timeout) {
 			clearTimeout(this.timeout);
@@ -59,11 +72,35 @@ export class Decorator {
     
 		const decorationOptions: vscode.DecorationOptions[] = [];
 
-		for(const survivor of this.reneriState.testsObservation.signaledMethods){	
-			for(const hint of survivor.hints){
-				if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
-					const decoration = this.generateTestDecoration(hint,survivor);
-					decorationOptions.push(decoration);
+		for(const signaledMethod of this.reneriState.testsObservation.signaledMethods){	
+			if(signaledMethod.hints.length > 0){
+				for(const hint of signaledMethod.hints){
+					if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
+						const decoration = this.generateTestDecoration(hint,signaledMethod);
+						decorationOptions.push(decoration);
+					}
+				}
+			}
+			else{
+				const descartesMutation = this.descartesState.descartesReports.mutationReport.mutations.filter( m => 
+					m.status === 'SURVIVED'
+					&& m.method.class === signaledMethod.mutation.class
+					&& m.method.name === signaledMethod.mutation.method);
+				if(descartesMutation){
+					for(const testString of descartesMutation[0].tests.ordered){
+						const testString0 = testString.split('(')[0];
+						let testName = testString0.substring(testString0.lastIndexOf('.')+1, testString.length-1);
+						
+						for(let line = 0; line < this.activeEditor.document.lineCount; line++){
+							if(this.activeEditor.document.lineAt(line).text.match('^.*' + testName + '.*$')){
+								this.activeEditor.document.lineAt(line).firstNonWhitespaceCharacterIndex;
+								const firstChar = this.activeEditor.document.lineAt(line).firstNonWhitespaceCharacterIndex;
+								const lastChar = this.activeEditor.document.lineAt(line).text.length-1;
+								const decoration = this.generateTestDecorationByDescartesMutation(descartesMutation[0],line,firstChar,lastChar);
+								decorationOptions.push(decoration);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -89,7 +126,10 @@ export class Decorator {
 								break;
 							}
 						}
-						const range = this.activeEditor.document.lineAt(l).range;
+						const range = new vscode.Range(
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).firstNonWhitespaceCharacterIndex),
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).text.length)
+						)
 						const decoration = this.generateMethodDecoration(descartesMethod[0],range);
 						decorationOptions.push(decoration);
 					}
@@ -109,7 +149,10 @@ export class Decorator {
 								break;
 							}
 						}
-						const range = this.activeEditor.document.lineAt(l).range;
+						const range = new vscode.Range(
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).firstNonWhitespaceCharacterIndex),
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).text.length)
+						)
 						const decoration = this.generateMethodDecoration(method,range);
 						decorationOptions.push(decoration);
 					}
@@ -125,17 +168,24 @@ export class Decorator {
 		return { range: range, hoverMessage: hoverMessage };
 	}
 
-	generateTestDecoration(hint: Hint, survivor: SignaledMethod) : vscode.DecorationOptions {
+	generateTestDecoration(hint: Hint, signaledMethod: SignaledMethod) : vscode.DecorationOptions {
 			const from = new vscode.Position(hint.location.from.line-1, hint.location.from.column-1);
 			const to = new vscode.Position(hint.location.to.line-1, hint.location.to.column);
 			const range: vscode.Range = new vscode.Range(from , to);
-			const hoverMessage = this.generateTestHoverMessage(survivor, hint);
+			const hoverMessage = this.generateTestHoverMessage(signaledMethod, hint);
 			return { range: range, hoverMessage: hoverMessage };
 	}
 
+	generateTestDecorationByDescartesMutation(descartesMutation: DescartesMutationFull,line:number,firstChar:number,lastChar:number) : vscode.DecorationOptions {
+		const from = new vscode.Position(line, firstChar);
+		const to = new vscode.Position(line, lastChar);
+		const range: vscode.Range = new vscode.Range(from , to);
+		const hoverMessage = this.generateTestHoverMessageWithDescartesMutation(descartesMutation);
+		return { range: range, hoverMessage: hoverMessage };
+}
 
-	generateTestHoverMessage(survivor: SignaledMethod, hint: Hint) : MarkdownString{
-		const diff = survivor.diffs.find(d => d.pointcut === hint.pointcut);
+	generateTestHoverMessage(signaledMethod: SignaledMethod, hint: Hint) : MarkdownString{
+		const diff = signaledMethod.diffs.find(d => d.pointcut === hint.pointcut);
 		let markDownString: MarkdownString = new MarkdownString();
 		markDownString.appendMarkdown( 
 		`<p><span style="color:#00BE83;">Original</span> Code :</p>
@@ -147,6 +197,19 @@ export class Decorator {
 		<ul>
 		<li><span style="color:#00BE83;"> Value</span> : ${diff?.unexpected[0].literalValue} </li>
 		<li><span style="color:#00BE83;"> Type</span> : ${diff?.unexpected[0].typeName} </li>
+		</ul>`);
+		markDownString.supportHtml = true;
+		markDownString.isTrusted = true;
+		return markDownString;
+	}
+	
+	generateTestHoverMessageWithDescartesMutation(descartesMutation: DescartesMutationFull) : MarkdownString {
+		let markDownString: MarkdownString = new MarkdownString();
+		markDownString.appendMarkdown( 
+		`<p><span style="color:#00BE83;">Undetected</span> Mutation :</p>
+		<ul>
+		<li><span style="color:#00BE83;"> Mutator</span> : ${descartesMutation.mutator} </li>
+		<li><span style="color:#00BE83;"> On method</span> : ${descartesMutation.method.class + '.' + descartesMutation.method.name + '()'} </li>
 		</ul>`);
 		markDownString.supportHtml = true;
 		markDownString.isTrusted = true;
@@ -167,9 +230,9 @@ export class Decorator {
 			}
 
 			if(mutation.status === 'SURVIVED'){
-				let mutationTestsString: string = "";
+				let mutationTestsString: string = "<br>";
 				for(const test of mutation.tests){
-					mutationTestsString += "<code>" + test + "</code><br>";
+					mutationTestsString += "<code>" + test.replace(/\(.*\)/,'\(\)') + "</code><br>";
 				}
 				markDownString.appendMarkdown(
 				`<p><span style="color:#00BE83;">Undetected</span> mutation :</p>
@@ -179,15 +242,15 @@ export class Decorator {
 				</ul>`);
 			}
 			if(mutation.status === "KILLED"){
-				let mutationTestsString: string = "";
+				let mutationTestsString: string = "<br>";
 				for(const test of mutation['killing-tests']){
-					mutationTestsString += "<code>" + test + "</code><br>";
+					mutationTestsString += "<code>" + test.replace(/\(.*\)/,'\(\)') + "</code><br>";
 				}
 				markDownString.appendMarkdown(
 				`<p><span style="color:#00BE83;">Killed</span> mutation :</p>
 				<ul>  
 				  <li><span style="color:#00BE83;"> Mutator</span> : ${mutation.mutator}  <br><code>${description}</code></li>
-				  <li><span style="color:#00BE83;"> Killing tests</span> : <code>${mutation['killing-tests']}</code>  </li>
+				  <li><span style="color:#00BE83;"> Killing tests</span> : <code>${mutationTestsString}</code>  </li>
 				</ul>`);	
 			}
 			if(mutation.status === "NO_COVERAGE"){

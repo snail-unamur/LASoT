@@ -8,13 +8,21 @@ LASoT extension for VS Code provides :
 
 <details open>
 <summary>LASoT Explorer</summary>
-The extension provides a treeView to execute Maven Descartes, Reneri and LASoT commands.  
+<br>
+The extension provides a treeView to execute Maven Descartes, Reneri and LASoT commands.  <br>
 
 ![LASoT Explorer](img/lasot-explorer.PNG)
 
-- Descartes:mutationCoverage goal execute generates extreme transformations to the code and provides reports.  Those reports are accessibles in the target/pit-reports folder.  
+- Descartes:mutationCoverage goal execute generates extreme transformations to the code and provides reports.  Those reports are accessibles in the target/pit-reports folder. 
+- Reneri:observeMethods goal observes the execution of the original method and each transformed variant of the method. 
+- Reneri:observeTests goal observes the execution of each test case for the original methods and the transformed variants. 
+- Reneri:hints goal Generates improvement hints according to the results obtained with the execution of the two previous goals. 
+- LASoT:highlightsHints goal decorates code based on the reporting of the previous goals. 
 
 To be able to display the decorations, each goals must be executed in the presented order (Descartes->Reneri->LASoT) 
+
+</details>
+
 <details closed>
 <summary>Wizard</summary>
 A Wizard to guide users to follow the steps correctly. To launch the wizard enter "LASoT Wizard" in the command palette.

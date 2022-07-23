@@ -31,6 +31,7 @@ A Wizard to guide users to follow the steps correctly. To launch the wizard ente
 ![Wizard](img/lasot-wizard.PNG)
 
 </details>
+
 <details closed>
 <summary>Status bar</summary><br>
 

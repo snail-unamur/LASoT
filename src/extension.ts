@@ -70,10 +70,12 @@ export async function activate(context: vscode.ExtensionContext) {
 			
 			if(node && node.command?.title === "observeMethods" || goal === "eu.stamp-project:reneri:observeMethods"){
 				progress.report({ increment: 10 });
-				await descartesState.copyReportFilesToTargetFolder();
 				await descartesState.initialize();
+				await descartesState.copyReportFilesToTargetFolder();
 				updateStatusBarItem();
 			}
+			
+			await Utils.delay(2000);
 
 			if(!hidden){
 				terminal.show(preserveFocus);
@@ -98,7 +100,6 @@ export async function activate(context: vscode.ExtensionContext) {
 				
 				progress.report({ increment: 50 });
 	
-				await Utils.delay(2000);
 			}
 
 			progress.report({ increment: 80 });

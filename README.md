@@ -19,7 +19,7 @@ The extension provides a treeView to execute Maven Descartes, Reneri and LASoT c
 - <strong>Reneri:hints</strong> goal Generates improvement hints according to the results obtained with the execution of the two previous goals. 
 - <strong>LASoT:highlightsHints</strong> goal decorates code based on the reporting of the previous goals. 
 
-To be able to display the decorations, each goals must be executed in the presented order (Descartes->Reneri->LASoT) 
+> To be able to display the decorations, at least the Descartes goal must be executed.  Descartes will indicate which methods is uncovered, partially or pseudo tested and which test must be improved.  Reneri gives more precise informations about the values of the original code and the transformation. To take advantages of Reneri reports each 3 goals must be executed in the presented order. 
 
 </details>
 

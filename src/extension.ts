@@ -60,20 +60,27 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Window,
 			title: `Executing ${(node?node.command?.title:title)} goal`,
-			cancellable: true
+			cancellable: false
 		}, async (progress, token) => {
 			token.onCancellationRequested(() => {
 				console.log("User canceled the long running operation");
 			});
 
 			progress.report({ increment: 0 });
+			
+			if(node && node.command?.title === "observeMethods" || goal === "eu.stamp-project:reneri:observeMethods"){
+				progress.report({ increment: 10 });
+				await descartesState.copyReportFilesToTargetFolder();
+				await descartesState.initialize();
+				updateStatusBarItem();
+			}
 
 			if(!hidden){
 				terminal.show(preserveFocus);
 			}
 			terminal.sendText(`& "${mavenExecutablePath}" ${goalString} -f "${pomPath}" ${exitString}`);
 	
-			progress.report({ increment: 20, message: "In progress.." });
+			progress.report({ increment: 20 });
 
 			if((node && node.exit) || exit){
 				await new Promise((resolve, reject) => {
@@ -89,20 +96,12 @@ export async function activate(context: vscode.ExtensionContext) {
 					});
 				});
 				
-				progress.report({ increment: 50, message: "In progress.." });
+				progress.report({ increment: 50 });
 	
 				await Utils.delay(2000);
-
-				progress.report({ increment: 65, message: "Preparing files for Reneri plugin.." });
-	
-				if(node && node.command?.title === "mutationCoverage" || goal === "org.pitest:pitest-maven:mutationCoverage"){
-					await descartesState.initialize();
-					await descartesState.copyReportFilesToTargetFolder();
-					updateStatusBarItem();
-				}
 			}
 
-			progress.report({ increment: 80, message: "In progress.." });
+			progress.report({ increment: 80 });
 			
 			const p = new Promise<void>(resolve => {
 				setTimeout(() => {
@@ -110,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				}, 2000);
 			});
 			
-			progress.report({ increment: 100, message: "Done" });
+			progress.report({ increment: 100 });
 
 			return p;
 		});

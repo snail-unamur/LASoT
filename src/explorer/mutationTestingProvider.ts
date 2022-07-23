@@ -71,7 +71,7 @@ function getCommandsInMenu(label: string | vscode.TreeItemLabel | undefined): vs
         title: 'mutationCoverage'
       }
       ];
-    return DEFAULT_DESCARTES_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'goal', command,true));
+    return DEFAULT_DESCARTES_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'goal', command,false));
   }
   else if(label === "Reneri"){
     const DEFAULT_RENERI_COMMANDS: vscode.Command[] = [

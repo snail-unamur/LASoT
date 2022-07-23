@@ -10,7 +10,7 @@ LASoT extension for VS Code provides :
 <summary>LASoT Explorer</summary>
 The extension provides a treeView to execute Maven Descartes, Reneri and LASoT commands.  
 
-\!\[LASoT Explorer\]\(img/lasot-explorer.png\)
+[LASoT Explorer](img/lasot-explorer.png\
 
 - Descartes:mutationCoverage goal execute generates extreme transformations to the code and provides reports.  Those reports are accessibles in the target/pit-reports folder.  
 

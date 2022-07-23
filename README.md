@@ -30,6 +30,7 @@ A Wizard to guide users to follow the steps correctly. To launch the wizard ente
 
 ![Wizard](img/lasot-wizard.PNG)
 
+</details>
 <details closed>
 <summary>Status bar</summary><br>
 
@@ -42,9 +43,21 @@ You can click on it to show more informations about the undected mutations.
 ![Dialog](img/lasot-statusbar-dialog.PNG)
 
 
+</details>
 <details closed>
-<summary>Decorations</summary>
-Decorations incorporated into the code.
+<summary>Decorations</summary><br>
+
+The extension decorates the signature of the methods in your classes and in the code of your tests suites.  It incorporates informations showed in an overlay when you hover the decoration.<br> 
+
+The overlay of signaled methods indicates the classification of this method (uncovered, partially-tested or pseudo-tested).  It also gives more informations about the undetected mutations and killed mutations.
+
+![Methods Decorations](img/lasot-decorations-methods.PNG)
+
+The overlay of signaled tests indicates the value and type of the decorated part for the original version of the program and the undetected mutation.
+
+![Methods Decorations](img/lasot-decorations-tests.PNG)
+
+</details>
 
 ## Usage
 

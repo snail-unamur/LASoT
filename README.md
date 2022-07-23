@@ -1,6 +1,6 @@
-# lasot README
+# LASoT : A visual studio code plugin to visualize Descartes and Reneri reports 
 
-LASoT Plugin
+LASoT Plugin The goal of this experiment is to evaluate at which extent the inclusion of Descartes and Reneri reports in an IDE plugin can help students to refine the assertions of their tests. 
 
 ## Features
 

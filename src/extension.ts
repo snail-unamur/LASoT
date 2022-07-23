@@ -119,7 +119,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
 		oldSurvivorsCount = reneriState.getNumberOfSurvivors();
-		await reneriState.readReneri();
+		await descartesState.initialize();
+		await reneriState.initialize();
+		updateStatusBarItem();
 		decorator.activate();
 		decorator.triggerUpdateDecorations();
 	});

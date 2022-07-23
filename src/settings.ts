@@ -8,7 +8,7 @@ export namespace Settings {
     export const DESCARTES_MUTATION_COVERAGE : string = 'org.pitest:pitest-maven:mutationCoverage';
     export const RENERI_OBSERVE_METHODS : string = 'eu.stamp-project:reneri:observeMethods';
     export const RENERI_OBSERVE_TESTS : string = 'eu.stamp-project:reneri:observeTests';
-    export const RENERI_HINTS : string = 'org.pitest:pitest-maven:hints';
+    export const RENERI_HINTS : string = 'eu.stamp-project:reneri:hints';
     export const DESCARTES_OPERATORS: MutationOperator[] = [
         {name:'void',description:'This operator accepts a void method and removes all the instructions on its body.'},
         {name:'null',description:'This operator accepts a method with a reference return type and replaces all instructions with return null.'},

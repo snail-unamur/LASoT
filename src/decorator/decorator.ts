@@ -72,22 +72,44 @@ export class Decorator {
     
 		const decorationOptions: vscode.DecorationOptions[] = [];
 
-		for(const signaledMethod of this.reneriState.testsObservation.signaledMethods){	
-			if(signaledMethod.hints.length > 0){
-				for(const hint of signaledMethod.hints){
-					if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
-						const decoration = this.generateTestDecoration(hint,signaledMethod);
-						decorationOptions.push(decoration);
+		if(this.reneriState.testsObservation.signaledMethods.length > 0){
+			for(const signaledMethod of this.reneriState.testsObservation.signaledMethods){	
+				if(signaledMethod.hints.length > 0){
+					for(const hint of signaledMethod.hints){
+						if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === hint.location.file.toLowerCase()){
+							const decoration = this.generateTestDecoration(hint,signaledMethod);
+							decorationOptions.push(decoration);
+						}
+					}
+				}
+				else{
+					const descartesMutation = this.descartesState.descartesReports.mutationReport.mutations.filter( m => 
+						m.status === 'SURVIVED'
+						&& m.method.class === signaledMethod.mutation.class
+						&& m.method.name === signaledMethod.mutation.method);
+					if(descartesMutation){
+						for(const testString of descartesMutation[0].tests.ordered){
+							const testString0 = testString.split('(')[0];
+							let testName = testString0.substring(testString0.lastIndexOf('.')+1, testString.length-1);
+							
+							for(let line = 0; line < this.activeEditor.document.lineCount; line++){
+								if(this.activeEditor.document.lineAt(line).text.match('^.*' + testName + '.*$')){
+									this.activeEditor.document.lineAt(line).firstNonWhitespaceCharacterIndex;
+									const firstChar = this.activeEditor.document.lineAt(line).firstNonWhitespaceCharacterIndex;
+									const lastChar = this.activeEditor.document.lineAt(line).text.length-1;
+									const decoration = this.generateTestDecorationByDescartesMutation(descartesMutation[0],line,firstChar,lastChar);
+									decorationOptions.push(decoration);
+								}
+							}
+						}
 					}
 				}
 			}
-			else{
-				const descartesMutation = this.descartesState.descartesReports.mutationReport.mutations.filter( m => 
-					m.status === 'SURVIVED'
-					&& m.method.class === signaledMethod.mutation.class
-					&& m.method.name === signaledMethod.mutation.method);
-				if(descartesMutation){
-					for(const testString of descartesMutation[0].tests.ordered){
+		}
+		else{
+			for(const descartesMutation of this.descartesState.descartesReports.mutationReport.mutations.filter( m => 
+				m.status === 'SURVIVED')){
+					for(const testString of descartesMutation.tests.ordered){
 						const testString0 = testString.split('(')[0];
 						let testName = testString0.substring(testString0.lastIndexOf('.')+1, testString.length-1);
 						
@@ -96,14 +118,15 @@ export class Decorator {
 								this.activeEditor.document.lineAt(line).firstNonWhitespaceCharacterIndex;
 								const firstChar = this.activeEditor.document.lineAt(line).firstNonWhitespaceCharacterIndex;
 								const lastChar = this.activeEditor.document.lineAt(line).text.length-1;
-								const decoration = this.generateTestDecorationByDescartesMutation(descartesMutation[0],line,firstChar,lastChar);
+								const decoration = this.generateTestDecorationByDescartesMutation(descartesMutation,line,firstChar,lastChar);
 								decorationOptions.push(decoration);
 							}
 						}
 					}
-				}
 			}
 		}
+
+		
 		
 		for(const signaledMethod of this.reneriState.methodsObservation.signaledMethods){	
 			//  Pour chaque méthode signalée, affiche les informations des reneri et descartes

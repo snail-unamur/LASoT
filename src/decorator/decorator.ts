@@ -130,10 +130,64 @@ export class Decorator {
 			}
 		}
 
+		
+		
+		for(const signaledMethod of this.reneriState.methodsObservation.signaledMethods){	
+			//  Pour chaque méthode signalée, affiche les informations des reneri et descartes
+			const descartesMutation = this.descartesState.descartesReports.mutationReport.mutations.filter(m => 
+				m.method.class === signaledMethod.mutation.class 
+				&& m.method.package === signaledMethod.mutation.package
+				&& m.method.name === signaledMethod.mutation.method);
+			const descartesMethod = this.descartesState.descartesReports.methodReport.methods.filter(m => 
+				m.class === signaledMethod.mutation.class 
+				&& m.package.split('/').join('.') === signaledMethod.mutation.package
+				&& m.name === signaledMethod.mutation.method);
+			if(descartesMutation && descartesMethod){	
+				const f = await vscode.workspace.findFiles('**/src/**/' + descartesMutation[0].file);
+				if(f){
+					if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === f[0].fsPath.toLowerCase()){
+						let l = descartesMutation[0].line;
+						while(!this.activeEditor.document.lineAt(l).text.match('^.*' + descartesMutation[0].method.name + '.*$')){
+							l--;
+							if(l === descartesMutation[0].line-10){
+								break;
+							}
+						}
+						const range = new vscode.Range(
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).firstNonWhitespaceCharacterIndex),
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).text.length)
+						)
+						const decoration = this.generateMethodDecoration(descartesMethod[0],range);
+						decorationOptions.push(decoration);
+					}
+				}
+			}
+		}
+
 		for(const method of this.descartesState.descartesReports.methodReport.methods){
 			if(method.classification === 'not-covered'
 			|| method.classification === 'partially-tested'
 			|| method.classification === 'pseudo-tested'){
+				const f = await vscode.workspace.findFiles('**/src/**/' + method['file-name']);
+				if(f){
+					if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === f[0].fsPath.toLowerCase()){
+						let l = method['line-number'];
+						while(!this.activeEditor.document.lineAt(l).text.match('^.*' + method.name + '.*$')){
+							l--;
+							if(l === method['line-number']-10){
+								break;
+							}
+						}
+						const range = new vscode.Range(
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).firstNonWhitespaceCharacterIndex),
+							new vscode.Position(l,this.activeEditor.document.lineAt(l).text.length)
+						);
+						const decoration = this.generateMethodDecoration(method,range);
+						decorationOptions.push(decoration);
+					}
+				}
+			}
+			else if(method.classification === 'partially-tested' || method.classification === 'pseudo-tested'){
 				const f = await vscode.workspace.findFiles('**/src/**/' + method['file-name']);
 				if(f){
 					if(this.activeEditor.document.uri.fsPath.toLocaleLowerCase() === f[0].fsPath.toLowerCase()){

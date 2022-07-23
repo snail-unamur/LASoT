@@ -34,9 +34,10 @@ export class ReneriState {
         this.methodsObservation = new Observation(ObservationType.methods);
         this.testsObservation = new Observation(ObservationType.tests);
 
-        return this.findFolder().then(files => {
+        return this.findFolder().then(async files => {
             if(files.length > 0){
                 this._reportFolders = files;
+                await this.readReneri();
             }
         });
     }
@@ -62,9 +63,7 @@ export class ReneriState {
         return date;
     }
 
-    public async readReneri(){
-
-        await this.initialize();
+    public async readReneri() {
 
         if(this.folderExists()){
 

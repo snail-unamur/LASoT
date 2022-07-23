@@ -50,6 +50,9 @@ You can click on it to show more informations about the undected mutations.
 
 The extension decorates the signature of the methods in your classes and in the code of your tests suites.  It incorporates informations showed in an overlay when you hover the decoration.<br> 
 
+> Tips : Code highlighted is indicated with blue points in the minimap.
+> ![Methods Decorations](img/lasot-decorations-minimap.PNG)
+
 The overlay of <strong>signaled methods</strong> indicates the classification of this method (uncovered, partially-tested or pseudo-tested).  It also gives more informations about the undetected mutations and killed mutations.
 
 ![Methods Decorations](img/lasot-decorations-methods.PNG)

@@ -65,5 +65,5 @@ The overlay of <strong>signaled tests</strong> indicates the value and type of t
 
 ## Requirements
 
-The Java project on which this extension is applicated must includes Descartes and Reneri extensions.  Reneri extension needs an installation of [Maven](https://github.com/apache/maven) to properly operates. 
+The Java project on which this extension is applicated must includes Descartes and Reneri extensions.  Reneri extension needs an installation of [Maven](https://github.com/apache/maven) and set in the PATH variable to properly operates. 
 

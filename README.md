@@ -41,7 +41,7 @@ Quick indication of survived mutations in the status bar.<br>
 
 You can click on it to show more informations about the mutation score and the undected mutations.  The mutation score is calculated as the ratio of live mutants to overall mutants.
 
-![Dialog](img/lasot-statusbar-dialog.PNG)
+![Dialog](img/lasot-statusbar-dialog02.PNG)
 
 
 </details>

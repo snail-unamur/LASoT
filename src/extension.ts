@@ -188,7 +188,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	// --- Status bar
 	const myCommandId = 'lasot.showSurvivorsCount';
 	context.subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
-		let text: string = 'Survived mutations : \n';
+		let text: string = 'Mutation score : ' + descartesState.getMutationScore().toFixed(2) +'%\n';
+		text += 'Survived mutations : \n';
 		for(const survivor of descartesState.getSurvivors()){
 			text += '- Mutator : ' + survivor.mutator.toString() + ' on "' + survivor.file + '/' + survivor.method.name.toString() + '\n';
 		}

@@ -96,6 +96,14 @@ export class DescartesState {
         }
     }
 
+    public getMutationScore(): number {
+        if(this.descartesReports.mutationReport.mutations.length > 0){
+            const score = (this.survivors.length / this.descartesReports.mutationReport.mutations.length) * 100;
+            return score;
+        }
+        return 0;
+    }
+
     public async copyReportFilesToTargetFolder(): Promise<boolean>{
         const lastReportFolder = this.getLastReportFolder();
         let result = false;

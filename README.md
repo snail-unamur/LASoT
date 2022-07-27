@@ -28,7 +28,7 @@ The extension provides a treeView to execute Maven Descartes, Reneri and LASoT c
 
 A Wizard to guide users to follow the steps correctly. To launch the wizard enter "LASoT Wizard" in the command palette (Ctrl+Shift+P).<br>
 
-![Wizard](img/lasot-wizard.PNG)
+![Wizard](img/lasot-wizard02.PNG)
 
 </details>
 

@@ -236,16 +236,22 @@ export class Decorator {
 	generateTestHoverMessage(signaledMethod: SignaledMethod, hint: Hint) : MarkdownString{
 		const diff = signaledMethod.diffs.find(d => d.pointcut === hint.pointcut);
 		let markDownString: MarkdownString = new MarkdownString();
+		let typeComment = '';
+		if(signaledMethod.mutation.mutator === 'empty'){
+			typeComment = '(Array size)';
+		}
 		markDownString.appendMarkdown( 
-		`<p><span style="color:#00BE83;">Original</span> Code :</p>
+		`<p><span style="color:#00BE83;">Method</span> : ${signaledMethod.mutation.method} </p>
+		<p><span style="color:#00BE83;">Original</span> Code :</p>
 		<ul>
-		<li><span style="color:#00BE83;"> Value </span> : ${diff?.expected[0].literalValue} </li>
-		<li><span style="color:#00BE83;"> Type </span>: ${diff?.expected[0].typeName} </li>
-		</ul><br>
+		<li><span style="color:#00BE83;"> Returned Value </span> : ${diff?.expected[0].literalValue} </li>
+		<li><span style="color:#00BE83;"> Type </span>: ${diff?.expected[0].typeName} ${typeComment}</li>
+		</ul>
 		<p><span style="color:#00BE83;">Undetected</span> Mutation :</p>
 		<ul>
-		<li><span style="color:#00BE83;"> Value</span> : ${diff?.unexpected[0].literalValue} </li>
-		<li><span style="color:#00BE83;"> Type</span> : ${diff?.unexpected[0].typeName} </li>
+		<li><span style="color:#00BE83;"> Returned Value</span> : ${diff?.unexpected[0].literalValue} </li>
+		<li><span style="color:#00BE83;"> Type</span> : ${diff?.expected[0].typeName} ${typeComment}</li>
+		<li><span style="color:#00BE83;"> Mutator</span> : ${signaledMethod.mutation.mutator} </li>
 		</ul>`);
 		markDownString.supportHtml = true;
 		markDownString.isTrusted = true;

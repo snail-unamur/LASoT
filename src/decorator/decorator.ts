@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { MarkdownString } from 'vscode';
-import { DescartesMethod, DescartesMutationDetail, DescartesState } from '../descartesState';
+import { DescartesState } from '../descartesState';
+import { DescartesMethod, DescartesMutationDetail } from '../models/descartesModels';
 import { Hint, ReneriState, SignaledMethod } from '../reneriState';
 import { Settings } from '../settings';
 

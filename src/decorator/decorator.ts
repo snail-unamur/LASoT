@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { MarkdownString } from 'vscode';
-import { DescartesMethod, DescartesMutationFull, DescartesState } from '../descartesState';
+import { DescartesMethod, DescartesMutationDetail, DescartesState } from '../descartesState';
 import { Hint, ReneriState, SignaledMethod } from '../reneriState';
 import { Settings } from '../settings';
 
@@ -225,7 +225,7 @@ export class Decorator {
 			return { range: range, hoverMessage: hoverMessage };
 	}
 
-	generateTestDecorationByDescartesMutation(descartesMutation: DescartesMutationFull,line:number,firstChar:number,lastChar:number) : vscode.DecorationOptions {
+	generateTestDecorationByDescartesMutation(descartesMutation: DescartesMutationDetail,line:number,firstChar:number,lastChar:number) : vscode.DecorationOptions {
 		const from = new vscode.Position(line, firstChar);
 		const to = new vscode.Position(line, lastChar);
 		const range: vscode.Range = new vscode.Range(from , to);
@@ -258,7 +258,7 @@ export class Decorator {
 		return markDownString;
 	}
 	
-	generateTestHoverMessageWithDescartesMutation(descartesMutation: DescartesMutationFull) : MarkdownString {
+	generateTestHoverMessageWithDescartesMutation(descartesMutation: DescartesMutationDetail) : MarkdownString {
 		let markDownString: MarkdownString = new MarkdownString();
 		markDownString.appendMarkdown( 
 		`<p><span style="color:#00BE83;">Undetected</span> Mutation :</p>

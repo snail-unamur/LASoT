@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { MarkdownString } from 'vscode';
 import { DescartesState } from '../descartesState';
 import { DescartesMethod, DescartesMutationDetail } from '../models/descartesModels';
-import { Hint, ReneriState, SignaledMethod } from '../reneriState';
+import { Hint, SignaledMethod } from '../models/reneriModels';
+import { ReneriState } from '../reneriState';
 import { Settings } from '../settings';
 
 export class Decorator {

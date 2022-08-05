@@ -187,6 +187,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// --- Status bar
 	const statusBarCommandId = 'lasot.showSurvivorsCount';
+
 	// Create
 	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	myStatusBarItem.command = statusBarCommandId;
@@ -197,7 +198,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		let text: string = 'Mutation score : ' + descartesState.getMutationScore().toFixed(2) +'%\n';
 		text += 'Survived mutations : \n';
 		for(const survivor of descartesState.getSurvivors()){
-			text += '- Mutator : ' + survivor.mutator.toString() + ' on "' + survivor.file + '/' + survivor.method.name.toString() + '\n';
+			text += '- Mutator : ' 
+				+ survivor.mutator.toString() + ' on "' 
+				+ survivor.file + '/' + survivor.method.name.toString() + '\n';
 		}
 		vscode.window.showInformationMessage(text, { modal:true });
 	}));

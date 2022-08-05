@@ -21,13 +21,14 @@
     "commands": [
       {
         "command": "lasot.DeactivateHighlights",
-        "title": "Highlights Hints",
+        "title": "Hide Highlights",
         "icon": "$(stop)"
       },
       {
         "command": "lasot.highlightsHints",
         "title": "Highlights Hints",
-        "icon": "$(play)"
+        "icon": "$(play)",
+        "tooltip" : "Highlights reports given by Descartes and Reneri plugins"
       },
       {
         "command": "executeGoal",

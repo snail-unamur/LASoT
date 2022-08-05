@@ -186,8 +186,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 
 	// --- Status bar
-	const myCommandId = 'lasot.showSurvivorsCount';
-	context.subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
+	const statusBarCommandId = 'lasot.showSurvivorsCount';
+	// Create
+	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	myStatusBarItem.command = statusBarCommandId;
+	context.subscriptions.push(myStatusBarItem);
+	
+	// Bind Notification to statusBarCommand
+	context.subscriptions.push(vscode.commands.registerCommand(statusBarCommandId, () => {
 		let text: string = 'Mutation score : ' + descartesState.getMutationScore().toFixed(2) +'%\n';
 		text += 'Survived mutations : \n';
 		for(const survivor of descartesState.getSurvivors()){
@@ -195,10 +201,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 		vscode.window.showInformationMessage(text, { modal:true });
 	}));
-
-	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-	myStatusBarItem.command = myCommandId;
-	context.subscriptions.push(myStatusBarItem);
 
 	updateStatusBarItem();
 }

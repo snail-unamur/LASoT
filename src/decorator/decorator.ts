@@ -10,11 +10,11 @@ export class Decorator {
 
     private active: boolean = false;
 	public activeEditor = vscode.window.activeTextEditor;
-    reneriState: ReneriState;
-	descartesState: DescartesState;
+    private reneriState: ReneriState;
+	private descartesState: DescartesState;
 
     // decorator type used to decorate code pointed by reneri hints
-	reneriHintDecorationType = vscode.window.createTextEditorDecorationType({
+	private reneriHintDecorationType = vscode.window.createTextEditorDecorationType({
 		borderWidth: '1px',
 		borderStyle: 'solid',
 		overviewRulerColor: 'blue',
@@ -64,7 +64,7 @@ export class Decorator {
 		}
 	}
 
-    async updateDecorations() {
+    private async updateDecorations() {
         if (!this.active) {
             return;
         }
@@ -214,12 +214,12 @@ export class Decorator {
 		this.activeEditor.setDecorations(this.reneriHintDecorationType, decorationOptions);
     }
 
-	generateMethodDecoration(descartesMethod: DescartesMethod, range: vscode.Range) : vscode.DecorationOptions {
+	private generateMethodDecoration(descartesMethod: DescartesMethod, range: vscode.Range) : vscode.DecorationOptions {
 		const hoverMessage = this.generateMethodHoverMessage(descartesMethod);
 		return { range: range, hoverMessage: hoverMessage };
 	}
 
-	generateTestDecoration(hint: Hint, signaledMethod: SignaledMethod) : vscode.DecorationOptions {
+	private generateTestDecoration(hint: Hint, signaledMethod: SignaledMethod) : vscode.DecorationOptions {
 			const from = new vscode.Position(hint.location.from.line-1, hint.location.from.column-1);
 			const to = new vscode.Position(hint.location.to.line-1, hint.location.to.column);
 			const range: vscode.Range = new vscode.Range(from , to);
@@ -227,15 +227,15 @@ export class Decorator {
 			return { range: range, hoverMessage: hoverMessage };
 	}
 
-	generateTestDecorationByDescartesMutation(descartesMutation: DescartesMutationDetail,line:number,firstChar:number,lastChar:number) : vscode.DecorationOptions {
+	private generateTestDecorationByDescartesMutation(descartesMutation: DescartesMutationDetail,line:number,firstChar:number,lastChar:number) : vscode.DecorationOptions {
 		const from = new vscode.Position(line, firstChar);
 		const to = new vscode.Position(line, lastChar);
 		const range: vscode.Range = new vscode.Range(from , to);
 		const hoverMessage = this.generateTestHoverMessageWithDescartesMutation(descartesMutation);
 		return { range: range, hoverMessage: hoverMessage };
-}
+	}
 
-	generateTestHoverMessage(signaledMethod: SignaledMethod, hint: Hint) : MarkdownString{
+	private generateTestHoverMessage(signaledMethod: SignaledMethod, hint: Hint) : MarkdownString{
 		const diff = signaledMethod.diffs.find(d => d.pointcut === hint.pointcut);
 		let markDownString: MarkdownString = new MarkdownString();
 		let typeComment = '';
@@ -260,7 +260,7 @@ export class Decorator {
 		return markDownString;
 	}
 	
-	generateTestHoverMessageWithDescartesMutation(descartesMutation: DescartesMutationDetail) : MarkdownString {
+	private generateTestHoverMessageWithDescartesMutation(descartesMutation: DescartesMutationDetail) : MarkdownString {
 		let markDownString: MarkdownString = new MarkdownString();
 		markDownString.appendMarkdown( 
 		`<p><span style="color:#00BE83;">Undetected</span> Mutation :</p>
@@ -273,7 +273,7 @@ export class Decorator {
 		return markDownString;
 	}
 	
-	generateMethodHoverMessage(descartesMethod: DescartesMethod) : MarkdownString{
+	private generateMethodHoverMessage(descartesMethod: DescartesMethod) : MarkdownString{
 		let markDownString: MarkdownString = new MarkdownString();
 		markDownString.appendMarkdown(`<p><em>This method is ${descartesMethod.classification}</em></p>`);
 		for(const mutation of descartesMethod.mutations){

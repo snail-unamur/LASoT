@@ -14,7 +14,7 @@ export class MutationTestingProvider implements vscode.TreeDataProvider<vscode.T
         }
       } else {
         const ret: vscode.TreeItem[] = [];
-        const descartesMenu : Menu = new Menu("Descartes",vscode.TreeItemCollapsibleState.Collapsed);
+        const descartesMenu : Menu = new Menu("PITest Descartes",vscode.TreeItemCollapsibleState.Collapsed);
         const reneriMenu : Menu = new Menu("Reneri",vscode.TreeItemCollapsibleState.Collapsed);
         const lasotMenu : Menu = new Menu("LASoT",vscode.TreeItemCollapsibleState.Collapsed);
         ret.push(descartesMenu);
@@ -64,7 +64,7 @@ class Menu extends vscode.TreeItem {
 
 
 function getCommandsInMenu(label: string | vscode.TreeItemLabel | undefined): vscode.TreeItem[] {
-  if(label === "Descartes"){
+  if(label === "PITest Descartes"){
     const DEFAULT_DESCARTES_COMMANDS: vscode.Command[] = [
       {
         command: "org.pitest:pitest-maven:mutationCoverage",
@@ -77,15 +77,18 @@ function getCommandsInMenu(label: string | vscode.TreeItemLabel | undefined): vs
     const DEFAULT_RENERI_COMMANDS: vscode.Command[] = [
       {
         command: "eu.stamp-project:reneri:observeMethods",
-        title: 'observeMethods'
+        title: 'observeMethods',
+        tooltip : 'Execute observeMethods Reneri\'s goal'
       },
       {
         command: "eu.stamp-project:reneri:observeTests",
-        title: 'observeTests'
+        title: 'observeTests',
+        tooltip : 'Execute observeTests Reneri\'s goal'
       },
       {
         command: "eu.stamp-project:reneri:hints",
-        title: 'hints'
+        title: 'hints',
+        tooltip : 'Execute hints Reneri\'s goal'
       }
     ];
     return DEFAULT_RENERI_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'goal',command));
@@ -94,7 +97,8 @@ function getCommandsInMenu(label: string | vscode.TreeItemLabel | undefined): vs
     const DEFAULT_LASOT_COMMANDS: vscode.Command[] = [
       {
         command: "lasot.highlightsHints",
-        title: 'Highlights Hints'
+        title: 'Highlights Hints',
+        tooltip : 'Highlights reports given by Descartes and Reneri plugins'
       }
     ];
     return DEFAULT_LASOT_COMMANDS.map(command => new Goal(command.title, vscode.TreeItemCollapsibleState.None,'lasot',command));

@@ -199,8 +199,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		text += `Survived mutations (${survivorCount}) : \n`;
 		for(const survivor of descartesState.getSurvivors()){
 			text += '- Mutator : ' 
-				+ survivor.mutator.toString() + ' on "' 
-				+ survivor.file + '/' + survivor.method.name.toString() + '\n';
+				+ survivor.mutator.toString() + ' on Method : ' 
+				+ survivor.file.replace('java','') + survivor.method.name.toString() + '\n';
 		}
 		vscode.window.showInformationMessage(text, { modal:true });
 	}));

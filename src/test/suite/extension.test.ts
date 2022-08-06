@@ -32,8 +32,12 @@ suite('Extension Test Suite', () => {
         const roots = await lasotExplorerProvider.getChildren();
         assert.equal(roots?.length, 3, "Number of root node should be 3");
 
-        const menuNode = roots![0] as Menu;
+        let menuNode = roots![0] as Menu;
         assert.equal(menuNode.label, "PITest Descartes", "First menu label should be \"PITest Descartes\"");
+        menuNode = roots![1] as Menu;
+        assert.equal(menuNode.label, "Reneri", "Second menu label should be \"Reneri\"");
+        menuNode = roots![2] as Menu;
+        assert.equal(menuNode.label, "LASoT", "Third menu label should be \"LASoT\"");
     });
 
 });

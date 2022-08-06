@@ -195,7 +195,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Bind Notification to statusBarCommand
 	context.subscriptions.push(vscode.commands.registerCommand(statusBarCommandId, () => {
 		const survivorCount = descartesState.getSurvivors().length;
-		let text: string = 'Mutation score : ' + descartesState.getMutationScore().toFixed(2) +'%\n';
+		let text: string = 'Mutation score : ' + descartesState.getMutationScore().toFixed(2) +'% of mutations survived.\n';
 		text += `Survived mutations (${survivorCount}) : \n`;
 		for(const survivor of descartesState.getSurvivors()){
 			text += '- Mutator : ' 
@@ -221,13 +221,13 @@ function newScoreNotification(): void {
 	const score = descartesState.getMutationScore();
 	const oldScore = descartesState.getOldMutationScore();
 	if(score > oldScore){
-		vscode.window.showInformationMessage(`New mutation score ${score.toFixed(2)} is greater than the old one.  Keep on going! You will do better next time.`);
+		vscode.window.showInformationMessage(`${score.toFixed(2)}% of mutations survived. This score is greater than the old one.  Keep on going! You'll do better next time.`);
 	}
 	else if(score === descartesState.getOldMutationScore()){
-		vscode.window.showInformationMessage(`The mutation score ${score.toFixed(2)} is the same than the old one.`);
+		vscode.window.showInformationMessage(`${score.toFixed(2)}% of mutations survived. This score is the same than the old one.`);
 	}
 	else{
-		vscode.window.showInformationMessage(`Congratulations!  New mutation score ${score.toFixed(2)} is smaller than the old one.  Keep up the good work!`);
+		vscode.window.showInformationMessage(`${score.toFixed(2)}% of mutations survived. Congratulation ! This score is smaller than the old one.  Keep up the good work!`);
 	}
 }
 

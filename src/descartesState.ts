@@ -7,6 +7,8 @@ export class DescartesState {
     private _reportFolders: [string, vscode.FileType][] | undefined;
     public descartesReports: DescartesReports = new DescartesReports();
     private survivors: DescartesMutationDetail[] = [];
+    private oldMutationScore: number = 0.00;
+    private mutationScore: number = 0.00;
 
     public folderExists():boolean{
         if(this._reportFolders){
@@ -79,6 +81,9 @@ export class DescartesState {
                 }
 
                 this.registerSurvivors();
+
+                this.oldMutationScore = this.mutationScore;
+                this.mutationScore = this.caculateMutationScore();
             }
             
         }
@@ -97,12 +102,20 @@ export class DescartesState {
         }
     }
 
-    public getMutationScore(): number {
+    public caculateMutationScore(): number {
         if(this.descartesReports.mutationReport.mutations.length > 0){
             const score = (this.survivors.length / this.descartesReports.mutationReport.mutations.length) * 100;
             return score;
         }
         return 0;
+    }
+
+    public getOldMutationScore(): number {
+        return this.oldMutationScore;
+    }
+    
+    public getMutationScore(): number {
+        return this.mutationScore;
     }
 
     public async copyReportFilesToTargetFolder(): Promise<boolean>{

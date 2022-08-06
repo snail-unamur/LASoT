@@ -11,8 +11,7 @@ import { Settings } from "./settings";
 import { FileSystemProvider } from './utils/fileExplorer';
 import { Utils } from './utils/utils';
 
-let myStatusBarItem: vscode.StatusBarItem;
-let oldSurvivorsCount: number = 0;
+let statusBarItem: vscode.StatusBarItem;
 let descartesState: DescartesState = new DescartesState();
 let reneriState: ReneriState = new ReneriState();
 const fileSystemProvider: FileSystemProvider = new FileSystemProvider();
@@ -119,7 +118,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	
     vscode.commands.registerCommand('lasot.highlightsHints', async () => {
-		oldSurvivorsCount = reneriState.getNumberOfSurvivors();
 		await descartesState.initialize();
 		await reneriState.initialize();
 		updateStatusBarItem();
@@ -186,17 +184,20 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 
 	// --- Status bar
-	const statusBarCommandId = 'lasot.showSurvivorsCount';
 
 	// Create
-	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-	myStatusBarItem.command = statusBarCommandId;
-	context.subscriptions.push(myStatusBarItem);
+	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	context.subscriptions.push(statusBarItem);
 	
+	
+	const statusBarCommandId = 'lasot.showSurvivorsCount';
+	statusBarItem.command = statusBarCommandId;
+
 	// Bind Notification to statusBarCommand
 	context.subscriptions.push(vscode.commands.registerCommand(statusBarCommandId, () => {
+		const survivorCount = descartesState.getSurvivors().length;
 		let text: string = 'Mutation score : ' + descartesState.getMutationScore().toFixed(2) +'%\n';
-		text += 'Survived mutations : \n';
+		text += `Survived mutations (${survivorCount}) : \n`;
 		for(const survivor of descartesState.getSurvivors()){
 			text += '- Mutator : ' 
 				+ survivor.mutator.toString() + ' on "' 
@@ -212,9 +213,24 @@ export async function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 export function updateStatusBarItem(): void {
-	const n = descartesState.getSurvivors().length;
-	myStatusBarItem.text = `$(bug) ${n} survivor(s)`;
-	myStatusBarItem.show();
+	const score = descartesState.getMutationScore().toFixed(2);
+	statusBarItem.text = `$(bug) ${score}%`;
+	newScoreNotification();
+	statusBarItem.show();
 }
 
+function newScoreNotification(): void {
+	const score = descartesState.getMutationScore();
+	if(score > descartesState.getOldMutationScore()){
+		vscode.window.showInformationMessage(`New mutation score ${score} is greater than the old one.  Keep on going! You will do better next time.`);
+	}
+	else if(score === descartesState.getOldMutationScore()){
+		vscode.window.showInformationMessage(`The mutation score ${score} is the same than the old one.`);
+	}
+	else{
+		vscode.window.showInformationMessage(`Congratulations!  New mutation score ${score} is smaller than the old one.  Keep up the good work!`);
+	}
+	statusBarItem.text = `$(bug) ${score}%`;
+	statusBarItem.show();
+}
 

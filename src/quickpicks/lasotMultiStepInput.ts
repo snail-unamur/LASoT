@@ -13,7 +13,7 @@ const resourceDescartesOperators: QuickPickItem[] = ['void', 'null', 'empty', 'n
 .map(label => ({ label }));
 const resourceDescartesOperatorsConstant: string[] = ["true", "false","0","1","(short)0","(short)1","(byte)0","(byte)1","0L","1L","0.0","1.0","0.0f","1.0f","'\\40'","'A'","\"\"","\"A\""];
 const resourceDescartesGoal: QuickPickItem[] = [
-	{ label: 'mutationCoverage', description: 'Will run mutationCoverage goal from Descartes plugin', detail: 'Descartes evaluates the capability of your test suite to detect bugs using extreme mutation testing.' }
+	{ label: 'mutationCoverage', description: 'Run the mutationCoverage goal from PITest Descartes plugin', detail: 'Descartes extreme mutation engine will evaluates the capability of your test suite to detect bugs.' }
 ];
 
 const resourceReneriObserveMethodsGoal: QuickPickItem[] = [

@@ -3,13 +3,37 @@ import * as assert from 'assert';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
+import { LASoTExplorerProvider, Menu } from '../../explorer/lasotExplorerProvider';
 
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+	test("Java Extension should be present", () => {
+        assert.ok(vscode.extensions.getExtension("vscjava.vscode-java-pack"));
+    });
+
+    test("Java should be activated", async function() {
+        await vscode.extensions.getExtension("vscjava.vscode-java-pack")!.activate();
+        assert.ok(true);
 	});
+
+	test("Maven Extension should be present", () => {
+        assert.ok(vscode.extensions.getExtension("vscjava.vscode-maven"));
+    });
+
+    test("Maven should be activated", async function() {
+        await vscode.extensions.getExtension("vscjava.vscode-maven")!.activate();
+        assert.ok(true);
+    });
+
+    
+    test("Can list Descartes and Reneri's commands", async () => {
+        const lasotExplorerProvider = new LASoTExplorerProvider();
+        const roots = await lasotExplorerProvider.getChildren();
+        assert.equal(roots?.length, 3, "Number of root node should be 3");
+
+        const menuNode = roots![0] as Menu;
+        assert.equal(menuNode.label, "PITest Descartes", "First menu label should be \"PITest Descartes\"");
+    });
+
 });

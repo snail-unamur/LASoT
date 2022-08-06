@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { Decorator } from './decorator/decorator';
-import { Goal, MutationTestingProvider } from "./explorer/mutationTestingProvider";
+import { Goal, LASoTExplorerProvider } from "./explorer/lasotExplorerProvider";
 import { DescartesState } from './descartesState';
 import { ReneriState } from './reneriState';
 import { LASoTMultiStepInput } from './quickpicks/lasotMultiStepInput';
@@ -130,7 +130,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	// --- TreeView
 	vscode.window.registerTreeDataProvider(
 		'mutationTesting',
-		new MutationTestingProvider()
+		new LASoTExplorerProvider()
 	);
 
 	vscode.commands.registerCommand('mutationTesting.refresh', async () => {

@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
-export class MutationTestingProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+export class LASoTExplorerProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 
     getTreeItem(element: Goal): vscode.TreeItem {
       return element;
     }
   
-    getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
+    public getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
 
       if (element) {
         if(element instanceof Menu){
@@ -47,7 +47,7 @@ export class Goal extends vscode.TreeItem {
 
 }
 
-class Menu extends vscode.TreeItem {
+export class Menu extends vscode.TreeItem {
   constructor(
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,

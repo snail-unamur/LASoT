@@ -8,13 +8,11 @@ import { DescartesState } from './descartesState';
 import { ReneriState } from './reneriState';
 import { LASoTMultiStepInput } from './quickpicks/lasotMultiStepInput';
 import { Settings } from "./settings";
-import { FileSystemProvider } from './utils/fileExplorer';
 import { Utils } from './utils/utils';
 
 let statusBarItem: vscode.StatusBarItem;
 let descartesState: DescartesState = new DescartesState();
 let reneriState: ReneriState = new ReneriState();
-const fileSystemProvider: FileSystemProvider = new FileSystemProvider();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -71,7 +69,6 @@ export async function activate(context: vscode.ExtensionContext) {
 				progress.report({ increment: 10 });
 				await descartesState.initialize();
 				await descartesState.copyReportFilesToTargetFolder();
-				updateStatusBarItem();
 			}
 			
 			await Utils.delay(2000);
@@ -121,6 +118,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		await descartesState.initialize();
 		await reneriState.initialize();
 		updateStatusBarItem();
+		newScoreNotification();
 		decorator.activate();
 		decorator.triggerUpdateDecorations();
 	});
@@ -139,6 +137,7 @@ export async function activate(context: vscode.ExtensionContext) {
     	await descartesState.initialize();
 		await reneriState.initialize();
 		updateStatusBarItem();
+		newScoreNotification();
 	});
 
 	// --- Decorator
@@ -215,22 +214,20 @@ export function deactivate() {}
 export function updateStatusBarItem(): void {
 	const score = descartesState.getMutationScore().toFixed(2);
 	statusBarItem.text = `$(bug) ${score}%`;
-	newScoreNotification();
 	statusBarItem.show();
 }
 
 function newScoreNotification(): void {
 	const score = descartesState.getMutationScore();
-	if(score > descartesState.getOldMutationScore()){
-		vscode.window.showInformationMessage(`New mutation score ${score} is greater than the old one.  Keep on going! You will do better next time.`);
+	const oldScore = descartesState.getOldMutationScore();
+	if(score > oldScore){
+		vscode.window.showInformationMessage(`New mutation score ${score.toFixed(2)} is greater than the old one.  Keep on going! You will do better next time.`);
 	}
 	else if(score === descartesState.getOldMutationScore()){
-		vscode.window.showInformationMessage(`The mutation score ${score} is the same than the old one.`);
+		vscode.window.showInformationMessage(`The mutation score ${score.toFixed(2)} is the same than the old one.`);
 	}
 	else{
-		vscode.window.showInformationMessage(`Congratulations!  New mutation score ${score} is smaller than the old one.  Keep up the good work!`);
+		vscode.window.showInformationMessage(`Congratulations!  New mutation score ${score.toFixed(2)} is smaller than the old one.  Keep up the good work!`);
 	}
-	statusBarItem.text = `$(bug) ${score}%`;
-	statusBarItem.show();
 }
 

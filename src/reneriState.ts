@@ -80,10 +80,6 @@ export class ReneriState {
         }
         
     }
-
-    getNumberOfSurvivors(){
-        return this.testsObservation.signaledMethods.length;
-    }
     
     async readFiles(files: [string, vscode.FileType][], observationType:ObservationType, path:string) {
 

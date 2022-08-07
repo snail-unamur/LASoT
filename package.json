@@ -14,7 +14,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:mutationTesting"
+    "onView:lasotExplorer"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -44,7 +44,7 @@
         "title": "LASoT Wizard"
       },
       {
-        "command": "mutationTesting.refresh",
+        "command": "lasotExplorer.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       }
@@ -52,7 +52,7 @@
     "views": {
       "explorer": [
         {
-          "id": "mutationTesting",
+          "id": "lasotExplorer",
           "name": "LASoT Explorer"
         }
       ]
@@ -60,25 +60,25 @@
     "menus": {
       "view/title": [
         {
-          "command": "mutationTesting.refresh",
-          "when": "view == mutationTesting",
+          "command": "lasotExplorer.refresh",
+          "when": "view == lasotExplorer",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
           "command": "executeGoal",
-          "when": "view == mutationTesting && viewItem == goal",
+          "when": "view == lasotExplorer && viewItem == goal",
           "group": "inline"
         },
         {
           "command": "lasot.DeactivateHighlights",
-          "when": "view == mutationTesting && viewItem == lasot",
+          "when": "view == lasotExplorer && viewItem == lasot",
           "group": "inline"
         },
         {
           "command": "lasot.highlightsHints",
-          "when": "view == mutationTesting && viewItem == lasot",
+          "when": "view == lasotExplorer && viewItem == lasot",
           "group": "inline"
         }
       ]

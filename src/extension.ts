@@ -129,11 +129,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// --- TreeView
 	vscode.window.registerTreeDataProvider(
-		'mutationTesting',
+		'lasotExplorer',
 		new LASoTExplorerProvider()
 	);
 
-	vscode.commands.registerCommand('mutationTesting.refresh', async () => {
+	vscode.commands.registerCommand('lasotExplorer.refresh', async () => {
     	await descartesState.initialize();
 		await reneriState.initialize();
 		updateStatusBarItem();

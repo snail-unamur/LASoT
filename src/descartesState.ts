@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { DescartesMutationDetail, DescartesReports } from './models/descartesModels';
 import { Settings } from './settings';
 import { FileExplorer, FileSystemProvider } from './utils/fileExplorer';
+import path = require('path');
 
 export class DescartesState {
     private _reportFolders: [string, vscode.FileType][] | undefined;
@@ -20,9 +21,9 @@ export class DescartesState {
     }
 
     private async findFolder(): Promise<[string, vscode.FileType][]>{
-        const path = Settings.getRootPath() + `\\target\\pit-reports`;
+        const descartesFolderPath = Settings.getRootPath() + `${path.sep}target${path.sep}pit-reports`;
         const fileSystemProvider = new FileSystemProvider();
-        let descartesFolder = await fileSystemProvider._readDirectory(vscode.Uri.file(path));
+        let descartesFolder = await fileSystemProvider._readDirectory(vscode.Uri.file(descartesFolderPath));
         return descartesFolder;
     }
 
@@ -68,12 +69,12 @@ export class DescartesState {
                 for(const file of descartesFiles){
                     switch(file.path.split('/').pop()){
                         case 'mutations.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(file.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(file.fsPath);//vscode.Uri.file(folderPath + `${path.sep}${f[0]}`));
                             this.descartesReports.mutationReport = JSON.parse(a.getText());
                             break;
                         }
                         case 'methods.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(file.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(file.fsPath);//vscode.Uri.file(folderPath + `${path.sep}${f[0]}`));
                             this.descartesReports.methodReport = JSON.parse(a.getText());
                             break;
                         }
@@ -122,8 +123,8 @@ export class DescartesState {
         const lastReportFolder = this.getLastReportFolder();
         let result = false;
         if(lastReportFolder){
-            result = await FileSystemProvider.copyFile(`\\target\\pit-reports\\${lastReportFolder[0]}\\mutations.json`, `\\target\\mutations.json`);
-            result = await FileSystemProvider.copyFile(`\\target\\pit-reports\\${lastReportFolder[0]}\\methods.json`, `\\target\\methods.json`);
+            result = await FileSystemProvider.copyFile(`${path.sep}target${path.sep}pit-reports${path.sep}${lastReportFolder[0]}${path.sep}mutations.json`, `${path.sep}target${path.sep}mutations.json`);
+            result = await FileSystemProvider.copyFile(`${path.sep}target${path.sep}pit-reports${path.sep}${lastReportFolder[0]}${path.sep}methods.json`, `${path.sep}target${path.sep}methods.json`);
         }
         return result;
     }

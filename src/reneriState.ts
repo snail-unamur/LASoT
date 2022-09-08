@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { Observation, ObservationType, SignaledMethod } from './models/reneriModels';
 import { Settings } from './settings';
 import { FileSystemProvider } from './utils/fileExplorer';
+import path = require('path');
 
 export class ReneriState {
     private _reportFolders: [string, vscode.FileType][] | undefined;
@@ -26,9 +27,9 @@ export class ReneriState {
     }
 
     private async findFolder(): Promise<[string, vscode.FileType][]>{
-        const path = Settings.getRootPath() + `\\target\\reneri`;
+        const folderPath = Settings.getRootPath() + `${path.sep}target${path.sep}reneri`;
         const fileSystemProvider = new FileSystemProvider();
-        return fileSystemProvider._readDirectory(vscode.Uri.file(path));
+        return fileSystemProvider._readDirectory(vscode.Uri.file(folderPath));
     }
 
     public async initialize(): Promise<void>{
@@ -68,12 +69,12 @@ export class ReneriState {
 
         if(this.folderExists()){
 
-            const testsPath = Settings.getRootPath() + `\\target\\reneri\\observations\\tests`;
+            const testsPath = Settings.getRootPath() + `${path.sep}target${path.sep}reneri${path.sep}observations${path.sep}tests`;
             const testsFiles = await this.fileSystemProvider._readDirectory(vscode.Uri.file(testsPath));
             
             let r = await this.readFiles(testsFiles, ObservationType.tests, testsPath);
             
-            const methodsPath = Settings.getRootPath() + `\\target\\reneri\\observations\\methods`;
+            const methodsPath = Settings.getRootPath() + `${path.sep}target${path.sep}reneri${path.sep}observations${path.sep}methods`;
             const methodsFiles = await this.fileSystemProvider._readDirectory(vscode.Uri.file(methodsPath));
             
             r = await this.readFiles(methodsFiles, ObservationType.methods, methodsPath);
@@ -86,7 +87,7 @@ export class ReneriState {
         for(const file of files){
             if(file[1] === vscode.FileType.Directory){
                 let survivor: SignaledMethod = new SignaledMethod();
-                //const folderPath = path + '\\' + file[0];
+                //const folderPath = path + '${path.sep}' + file[0];
                 const globPattern = `**/target/reneri/observations/${ObservationType[observationType]}/${file[0]}/**/*.json`;
                 const survivorFiles = await vscode.workspace.findFiles(globPattern);
                 //const srvFiles = await vscode.workspace.findFiles('**/*.json',path2);
@@ -95,17 +96,17 @@ export class ReneriState {
                 for(const f of survivorFiles){
                     switch(f.path.split('/').pop()){
                         case 'hints.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `${path.sep}${f[0]}`));
                             survivor.hints = JSON.parse(a.getText());
                             break;
                         }
                         case 'diff.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `${path.sep}${f[0]}`));
                             survivor.diffs = JSON.parse(a.getText());
                             break;
                         }
                         case 'mutation.json': {
-                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `\\${f[0]}`));
+                            let a: vscode.TextDocument = await vscode.workspace.openTextDocument(f.fsPath);//vscode.Uri.file(folderPath + `${path.sep}${f[0]}`));
                             survivor.mutation = JSON.parse(a.getText());
                             break;
                         }

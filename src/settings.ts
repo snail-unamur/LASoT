@@ -46,7 +46,7 @@ export namespace Settings {
     }
 
     export function getPomPath() : string | undefined {
-    	return path.join(getRootPath() as string,'\\pom.xml');
+    	return path.join(getRootPath() as string, `${path.sep}pom.xml`);
     }
 
     export function getMavenExecutablePath() : string | undefined {        

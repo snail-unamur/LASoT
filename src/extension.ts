@@ -26,13 +26,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	let mavenExecutablePath = await Settings.getMavenWrapper();
 	if(mavenExecutablePath === undefined){
+		/*
 		let mavenExecutablePath = Settings.getMavenExecutablePath();
 		if(mavenExecutablePath === undefined){
 			vscode.window.showErrorMessage("Configure maven.executable.path in settings.json file.");
 		}
 		else{
 			mavenExecutablePath = mavenExecutablePath.concat('.cmd');
-		}
+		}*/
+		mavenExecutablePath = "mvn";
+	} else if(Settings.isWindows()){
+		mavenExecutablePath = `start ${mavenExecutablePath}`;
+	} else {
+		mavenExecutablePath = `. ${mavenExecutablePath}`;
 	}
 
 	await descartesState.initialize();
@@ -76,7 +82,9 @@ export async function activate(context: vscode.ExtensionContext) {
 			if(!hidden){
 				terminal.show(preserveFocus);
 			}
-			terminal.sendText(`& "${mavenExecutablePath}" ${goalString} -f "${pomPath}" ${exitString}`);
+			let cmd = `${mavenExecutablePath} ${goalString} -f "${pomPath}" ${exitString}`;
+			console.debug(`Executing in terminal: ${cmd}`);
+			terminal.sendText(cmd);
 	
 			progress.report({ increment: 20 });
 
@@ -177,7 +185,9 @@ export async function activate(context: vscode.ExtensionContext) {
 			terminal.show(preserveFocus);
 		}
 
-		terminal.sendText(`& "${mavenExecutablePath}" ${goal} -f "${pomPath}" ${exitString}`);
+		let cmd = `${mavenExecutablePath} ${goal} -f "${pomPath}" ${exitString}`;
+		console.debug(`Executing in terminal: ${cmd}`);
+		terminal.sendText(cmd);
 
 		return terminal;
 	});

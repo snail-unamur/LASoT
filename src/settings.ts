@@ -21,6 +21,10 @@ export namespace Settings {
     ];
     export const DESCARTES_MUTATORS = {
     };
+    
+    export function isWindows() : boolean{
+        return Boolean(vscode.env.appRoot && vscode.env.appRoot[0] !== "/");
+    }
 
     export function getMutatorDescription(mutator:string){
         switch(mutator){
@@ -51,13 +55,25 @@ export namespace Settings {
 
     export function getMavenExecutablePath() : string | undefined {        
         const mavenConfig = vscode.workspace.getConfiguration('maven');
-        return mavenConfig.get('executable.path'); 
+        var execPath: string | undefined = mavenConfig.get('executable.path');
+        if(execPath !== undefined){
+            // escape space char in path
+            execPath = execPath.replace(/\s/g, '\\ ');
+        }
+        return execPath;
     }
 
     export async function getMavenWrapper() : Promise<string | undefined> { 
-        const files = await vscode.workspace.findFiles('mvnw.cmd'); 
-        if(files.length > 0){
-            return './mvnw.cmd';
+        if(isWindows()){
+            const files = await vscode.workspace.findFiles('mvnw.cmd');
+            if(files.length > 0){
+                return './mvnw.cmd';
+            }
+        } else {
+            const files = await vscode.workspace.findFiles('mvnw');
+            if(files.length > 0){
+                return './mvnw';
+            }
         }
         return undefined;
     }
